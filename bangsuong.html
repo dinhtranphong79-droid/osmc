@@ -86,70 +86,61 @@
     })();
 
     // 2. GẮN HÀM XUẤT EXCEL VÀO WINDOW ĐỂ NÚT BẤM CÓ THỂ GỌI ĐƯỢC
-    window.exportIceToExcel = async function() {
-        // Kiểm tra dữ liệu
+window.exportIceToExcel = async function() {
+    // 1. Kiểm tra thư viện bằng nhiều cách khác nhau
+    const LIB = window.ExcelJS || (typeof ExcelJS !== 'undefined' ? ExcelJS : null);
+
+    if (!LIB) {
+        alert("Lỗi: Trình duyệt đang chặn thư viện ExcelJS. \n\nCách sửa: Nhấn vào biểu tượng Cái Khiên (hoặc Ổ Khóa) bên trái thanh địa chỉ và chọn 'Tắt chặn theo dõi' (Tracking Prevention) cho trang này.");
+        return;
+    }
+
+    try {
         const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
-        if (data.length === 0) {
-            alert("Không có dữ liệu để xuất!");
-            return;
-        }
+        if (data.length === 0) return alert("Không có dữ liệu!");
 
-        // Kiểm tra thư viện ExcelJS
-        const LIB_EXCEL = window.ExcelJS;
-        if (!LIB_EXCEL) {
-            alert("Lỗi: Không tìm thấy thư viện ExcelJS. Hãy kiểm tra file index.html");
-            return;
-        }
+        const workbook = new LIB.Workbook();
+        const sheet = workbook.addWorksheet('BangSuong');
 
-        try {
-            const workbook = new LIB_EXCEL.Workbook();
-            const sheet = workbook.addWorksheet('Băng Sương');
+        sheet.columns = [
+            { header: 'Tài khoản', key: 'acc', width: 20 },
+            { header: 'Ngày', key: 'date', width: 15 },
+            { header: 'Mùa', key: 'season', width: 10 },
+            { header: 'Level', key: 'lv', width: 15 }
+        ];
 
-            sheet.columns = [
-                { header: 'Tài khoản', key: 'acc', width: 25 },
-                { header: 'Ngày', key: 'date', width: 15 },
-                { header: 'Mùa', key: 'season', width: 12 },
-                { header: 'Level', key: 'lv', width: 15 }
-            ];
-
-            // Header in đậm
-            sheet.getRow(1).font = { bold: true };
-
-            data.forEach(r => {
-                const row = sheet.addRow({
-                    acc: r.acc,
-                    date: r.date,
-                    season: "Mùa " + r.season,
-                    lv: r.lv
-                });
-
-                // Xử lý ô Level có chữ 'max'
-                if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
-                    const cell = row.getCell('lv');
-                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
-                    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-                }
+        data.forEach(r => {
+            const row = sheet.addRow({
+                acc: r.acc,
+                date: r.date,
+                season: "Mùa " + r.season,
+                lv: r.lv
             });
-
-            // Ghi file
-            const buffer = await workbook.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            
-            // Sử dụng FileSaver (saveAs) hoặc tạo link tải
-            if (typeof saveAs !== 'undefined') {
-                saveAs(blob, "ThongKe_BangSuong.xlsx");
-            } else {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "BangSuong.xlsx";
-                a.click();
-                window.URL.revokeObjectURL(url);
+            // Tô màu xanh cho ô MAX
+            if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
+                const cell = row.getCell('lv');
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+                cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
             }
-        } catch (err) {
-            alert("Lỗi Excel: " + err.message);
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        // Dùng FileSaver (saveAs)
+        if (window.saveAs) {
+            window.saveAs(blob, "ThongKe_BangSuong.xlsx");
+        } else {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'BangSuong.xlsx';
+            a.click();
         }
-    };
+    } catch (err) {
+        alert("Lỗi hệ thống: " + err.message);
+    }
+};
 
     // Các hàm phụ trợ khác (Cũng nên gắn window nếu nút bấm gọi)
     window.addNewIceAcc = function() {
