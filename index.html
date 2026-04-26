@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Quản Lý Tab</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; border-radius: 5px; transition: 0.3s; }
+        .tab-btn.active { background: #007bff; color: white; }
+        .tab-btn:hover { background: #bbb; }
+        #tab-content { padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 200px; }
+    </style>
+</head>
+<body>
+
+    <h2>Hệ Thống Quản Lý Độc Lập</h2>
+
+    <div class="tab-menu">
+        <button class="tab-btn" onclick="loadTab('phao', this)">Tab Pháo</button>
+        <button class="tab-btn" onclick="loadTab('tuong', this)">Tab Tướng</button>
+        </div>
+
+    <div id="tab-content">
+        <p>Vui lòng chọn một tab để xem nội dung...</p>
+    </div>
+
+    <script>
+        function loadTab(tabName, element) {
+            // 1. Cập nhật trạng thái Active cho nút
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            // 2. Dùng Fetch API để lấy nội dung từ file html riêng
+            const contentDiv = document.getElementById('tab-content');
+            
+            fetch(`${tabName}.html`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Không tìm thấy file nội dung');
+                    return response.text();
+                })
+                .then(data => {
+                    contentDiv.innerHTML = data;
+                })
+                .catch(error => {
+                    contentDiv.innerHTML = "<p style='color:red;'>Lỗi: Không thể tải nội dung tab này.</p>";
+                });
+        }
+
+        // Mặc định load tab đầu tiên khi trang vừa mở
+        window.onload = () => {
+            document.querySelector('.tab-btn').click();
+        };
+    </script>
+</body>
+</html>
