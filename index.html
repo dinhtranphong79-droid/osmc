@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>osmc</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.full.min.js"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
         .tab-menu { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
@@ -31,45 +31,54 @@
 
     <script>
         function loadTab(tabName, element) {
-            // Cập nhật trạng thái Active cho nút
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
+    // 1. Cập nhật trạng thái Active cho nút bấm
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    element.classList.add('active');
 
-            const contentDiv = document.getElementById('tab-content');
-            
-            // Dùng Fetch API để lấy nội dung từ file html riêng
-            fetch(`${tabName}.html`)
-                .then(response => {
-                    if (!response.ok) throw new Error('Không tìm thấy file ' + tabName + '.html');
-                    return response.text();
-                })
-                .then(data => {
-                    contentDiv.innerHTML = data;
+    const contentDiv = document.getElementById('tab-content');
+    
+    // 2. Fetch nội dung từ file .html riêng
+    fetch(`${tabName}.html`)
+        .then(response => {
+            if (!response.ok) throw new Error(`Không tìm thấy file ${tabName}.html`);
+            return response.text();
+        })
+        .then(data => {
+            // Chèn HTML vào vùng nội dung
+            contentDiv.innerHTML = data;
 
-                    // 3. QUAN TRỌNG: ÉP CHẠY SCRIPT TRONG TAB CON (ĐỂ XUẤT EXCEL ĐƯỢC)
-                    const scripts = contentDiv.querySelectorAll("script");
-                    scripts.forEach(oldScript => {
-                        const newScript = document.createElement("script");
-                        // Sao chép nội dung script
-                        if (oldScript.src) {
-                            newScript.src = oldScript.src;
-                        } else {
-                            newScript.text = oldScript.text;
-                        }
-                        document.body.appendChild(newScript).parentNode.removeChild(newScript);
-                    });
-                })
-                .catch(error => {
-                    contentDiv.innerHTML = `<p style='color:red;'>Lỗi: ${error.message}</p>`;
+            // 3. Kích hoạt lại script bên trong file vừa tải
+            const scripts = contentDiv.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+
+                // Sao chép tất cả thuộc tính (src, type, async, v.v.)
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
                 });
-        }
 
-        // Mặc định load tab đầu tiên khi trang vừa mở
-        window.onload = () => {
-            const firstBtn = document.querySelector('.tab-btn');
-            if(firstBtn) firstBtn.click();
-        };
+                // Sao chép nội dung code bên trong (nếu không có src)
+                if (!oldScript.src) {
+                    newScript.text = oldScript.innerHTML;
+                }
+
+                // Thực thi script bằng cách chèn vào body rồi xóa ngay để sạch DOM
+                document.body.appendChild(newScript);
+                document.body.removeChild(newScript);
+            });
+        })
+        .catch(error => {
+            contentDiv.innerHTML = `<p style='color:red;'>Lỗi: ${error.message}</p>`;
+            console.error("Lỗi tải Tab:", error);
+        });
+}
+
+// Tự động kích hoạt tab đầu tiên khi trang tải xong
+window.onload = () => {
+    const firstBtn = document.querySelector('.tab-btn');
+    if (firstBtn) firstBtn.click();
+};
     </script>
 </body>
 </html>
