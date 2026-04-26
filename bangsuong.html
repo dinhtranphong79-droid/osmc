@@ -1,0 +1,194 @@
+<style>
+    /* Style đồng bộ với giao diện gốc của bạn */
+    .bs-card { padding: 10px; }
+    .bs-section { margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd; }
+    
+    .bs-form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: flex-end; }
+    .bs-form div { display: flex; flex-direction: column; gap: 5px; }
+    
+    .bs-input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+    
+    .bs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .bs-table th { background: #eee; padding: 10px; border: 1px solid #ccc; text-align: left; font-size: 14px; }
+    .bs-table td { padding: 10px; border: 1px solid #ccc; font-size: 14px; }
+
+    /* Nút bấm kiểu gốc */
+    .btn-bs { padding: 8px 15px; cursor: pointer; border: none; background: #ddd; border-radius: 5px; font-weight: bold; transition: 0.3s; }
+    .btn-bs:hover { background: #bbb; }
+    .btn-save { background: #007bff; color: white; }
+    .btn-save:hover { background: #0056b3; }
+    .btn-excel { background: #28a745; color: white; }
+
+    /* Highlight Xanh Biển cho chữ MAX */
+    .cell-max { 
+        background-color: #3b82f6 !important; 
+        color: white !important; 
+        font-weight: bold; 
+        text-align: center;
+        border-radius: 4px;
+    }
+    
+    .btn-del-bs { color: red; cursor: pointer; border: none; background: none; font-weight: bold; }
+</style>
+
+<div class="bs-card">
+    <h3>❄️ Quản Lý Băng Sương</h3>
+
+    <div class="bs-section">
+        <div class="bs-form">
+            <div style="flex: 1;">
+                <label>Thêm tài khoản mới:</label>
+                <input type="text" id="newIceAcc" class="bs-input" placeholder="Tên acc...">
+            </div>
+            <button class="btn-bs" onclick="addNewIceAcc()">Thêm Acc</button>
+        </div>
+    </div>
+
+    <div class="bs-section">
+        <div class="bs-form">
+            <div>
+                <label>Chọn Acc:</label>
+                <select id="selectIceAcc" class="bs-input" style="min-width: 120px;"></select>
+            </div>
+            <div>
+                <label>Ngày:</label>
+                <input type="date" id="iceDate" class="bs-input">
+            </div>
+            <div>
+                <label>Cấp độ:</label>
+                <input type="text" id="iceLvInput" class="bs-input" placeholder="VD: 651 hoặc max">
+            </div>
+            <button class="btn-bs btn-save" onclick="saveIceRecord()">Ghi Lại</button>
+            <button class="btn-bs btn-excel" onclick="exportIceToExcel()">Xuất Excel</button>
+        </div>
+    </div>
+
+    <table class="bs-table">
+        <thead>
+            <tr>
+                <th>Tài khoản</th>
+                <th>Ngày</th>
+                <th>Mùa</th>
+                <th style="text-align: center;">Level</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="iceTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    // Tự động chạy khi Tab được load qua Fetch
+    (function initIce() {
+        // Set ngày hiện tại
+        document.getElementById('iceDate').valueAsDate = new Date();
+        loadIceOptions();
+        renderIceTable();
+    })();
+
+    function addNewIceAcc() {
+        const name = document.getElementById('newIceAcc').value.trim();
+        if (!name) return;
+        let accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
+        if (!accs.includes(name)) {
+            accs.push(name);
+            localStorage.setItem('ice_acc_list', JSON.stringify(accs));
+            document.getElementById('newIceAcc').value = '';
+            loadIceOptions();
+        }
+    }
+
+    function loadIceOptions() {
+        const select = document.getElementById('selectIceAcc');
+        const accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
+        select.innerHTML = accs.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+
+    function saveIceRecord() {
+        const acc = document.getElementById('selectIceAcc').value;
+        const date = document.getElementById('iceDate').value;
+        const lv = document.getElementById('iceLvInput').value.trim();
+        
+        if (!acc || !lv) {
+            alert("Thiếu thông tin!");
+            return;
+        }
+
+        // Tính mùa từ gốc 13/04/2026 (Mùa 25)
+        const startDate = new Date('2026-04-13');
+        const diffDays = Math.floor((new Date(date) - startDate) / (1000 * 60 * 60 * 24));
+        const season = diffDays < 0 ? "N/A" : 25 + Math.floor(diffDays / 28);
+
+        const record = { id: Date.now(), acc, date, lv, season };
+        let data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+        data.unshift(record);
+        localStorage.setItem('ice_records_data', JSON.stringify(data));
+        
+        document.getElementById('iceLvInput').value = '';
+        renderIceTable();
+    }
+
+    function renderIceTable() {
+        const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+        const tbody = document.getElementById('iceTableBody');
+        
+        tbody.innerHTML = data.map(r => {
+            const isMax = r.lv.toLowerCase().includes('max');
+            const d = new Date(r.date);
+            const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear().toString().slice(-2)}`;
+
+            return `
+                <tr>
+                    <td><b>${r.acc}</b></td>
+                    <td>${dateStr}</td>
+                    <td>Mùa ${r.season}</td>
+                    <td class="${isMax ? 'cell-max' : ''}">${r.lv}</td>
+                    <td><span class="btn-del-bs" onclick="deleteIceRecord(${r.id})">✕</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function deleteIceRecord(id) {
+        if (!confirm("Xóa dòng này?")) return;
+        let data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+        data = data.filter(r => r.id !== id);
+        localStorage.setItem('ice_records_data', JSON.stringify(data));
+        renderIceTable();
+    }
+
+    async function exportIceToExcel() {
+        const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+        if (data.length === 0) return;
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('BangSuong');
+        sheet.columns = [
+            { header: 'Tài khoản', key: 'acc', width: 20 },
+            { header: 'Ngày', key: 'date', width: 15 },
+            { header: 'Mùa', key: 'season', width: 10 },
+            { header: 'Level', key: 'lv', width: 15 }
+        ];
+
+        data.forEach(r => {
+            const row = sheet.addRow({
+                acc: r.acc,
+                date: r.date,
+                season: "Mùa " + r.season,
+                lv: r.lv
+            });
+            if (r.lv.toLowerCase().includes('max')) {
+                const cell = row.getCell('lv');
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+                cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            }
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'BangSuong.xlsx';
+        a.click();
+    }
+</script>
