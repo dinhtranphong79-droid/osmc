@@ -1,0 +1,187 @@
+<style>
+    .cannon-container { max-width: 100%; margin: auto; background: white; border-radius: 12px; }
+    .input-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+    .input-group label { font-weight: bold; margin-bottom: 5px; color: #333; }
+    .cannon-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+    
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .btn-calc { padding: 12px; background: #2563eb; color: white; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+    .btn-clear { padding: 12px; background: #ef4444; color: white; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; }
+    .btn-calc:hover, .btn-clear:hover { opacity: 0.9; }
+
+    .result-box { margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 10px; border-left: 5px solid #2563eb; display: none; }
+    .log-text { white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; background: #eee; padding: 10px; border-radius: 5px; font-size: 13px; }
+    .history-section { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
+    .history-item { font-size: 14px; margin-bottom: 10px; padding: 8px; background: #fafafa; border-radius: 5px; }
+</style>
+
+<div class="cannon-container">
+    <h3>Level pháo</h3>
+    
+    <div class="input-group">
+        <label> Đá</label>
+        <input type="number" id="stone" class="cannon-input" value="0">
+    </div>
+    <div class="input-group">
+        <label> Gỗ </label>
+        <input type="number" id="wood" class="cannon-input" value="0">
+    </div>
+    <div class="input-group">
+        <label> Quặng </label>
+        <input type="number" id="ore" class="cannon-input" value="0">
+    </div>
+    <div class="input-group">
+        <label> Hộp pháo</label>
+        <input type="number" id="boxes" class="cannon-input" value="0">
+    </div>
+    <div class="input-group">
+        <label> Cấp mục tiêu </label>
+        <input type="number" id="targetLevel" class="cannon-input" placeholder="Để trống nếu muốn tính cấp tối đa">
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-calc" onclick="computeCannon()">Tính </button>
+        <button class="btn-clear" onclick="clearHistory()">Xóa lịch sử</button>
+    </div>
+
+    <div id="output" class="result-box"></div>
+
+    <div class="history-section">
+        <strong>Lịch sử tính toán:</strong>
+        <div id="historyBox"><i>Chưa có dữ liệu</i></div>
+    </div>
+</div>
+
+<script>
+    // Hàm lấy giá trị input
+    function getVal(id) {
+        let v = parseInt(document.getElementById(id).value);
+        return isNaN(v) || v < 0 ? 0 : v;
+    }
+
+    // Thuật toán mô phỏng tối ưu
+    function simulateOptimal(S, W, Q, B, lv) {
+        if (lv <= 0) return { ok: true, log: [], remaining: { stone: S, wood: W, ore: Q } };
+        
+        let stone = S, wood = W, ore = Q, box = B, log = [];
+        const needStone = 1260 * lv;
+        const needWood = 340 * lv;
+        const needOre = 130 * lv;
+
+        // 1. Dùng hộp pháo ưu tiên Quặng > Gỗ > Đá
+        let boxForOre = Math.min(box, Math.max(0, needOre - ore));
+        if (boxForOre > 0) {
+            log.push(`Dùng ${boxForOre} hộp → +${boxForOre} quặng`);
+            ore += boxForOre; box -= boxForOre;
+        }
+        let boxForWood = Math.min(box, Math.ceil(Math.max(0, needWood - wood) / 4));
+        if (boxForWood > 0) {
+            log.push(`Dùng ${boxForWood} hộp → +${boxForWood * 4} gỗ`);
+            wood += boxForWood * 4; box -= boxForWood;
+        }
+        if (box > 0) {
+            log.push(`Dùng ${box} hộp → +${box * 20} đá`);
+            stone += box * 20; box = 0;
+        }
+
+        // 2. Quy đổi tài nguyên (Đá -> Gỗ -> Quặng)
+        while (true) {
+            let changed = false;
+            let missOre = Math.max(0, needOre - ore);
+            let missWood = Math.max(0, needWood - wood);
+
+            let stoneToWood = Math.min(Math.floor(stone / 5), missWood + missOre * 4);
+            if (stoneToWood > 0) {
+                log.push(`Đổi ${stoneToWood * 5} đá → +${stoneToWood} gỗ`);
+                stone -= stoneToWood * 5; wood += stoneToWood; changed = true;
+            }
+
+            let woodToOre = Math.min(Math.floor(wood / 4), missOre);
+            if (woodToOre > 0) {
+                log.push(`Đổi ${woodToOre * 4} gỗ → +${woodToOre} quặng`);
+                wood -= woodToOre * 4; ore += woodToOre; changed = true;
+            }
+            if (!changed) break;
+        }
+
+        let missS = Math.max(0, needStone - stone);
+        let missW = Math.max(0, needWood - wood);
+        let missQ = Math.max(0, needOre - ore);
+
+        if (missS > 0 || missW > 0 || missQ > 0) {
+            return { ok: false, missing: { stone: missS, wood: missW, ore: missQ } };
+        }
+        return { ok: true, log, remaining: { stone: stone - needStone, wood: wood - needWood, ore: ore - needOre } };
+    }
+
+    function computeCannon() {
+        const S = getVal('stone'), W = getVal('wood'), Q = getVal('ore'), B = getVal('boxes');
+        const targetInput = document.getElementById('targetLevel').value;
+        const out = document.getElementById('output');
+        out.style.display = 'block';
+
+        let finalLevel = 0;
+        let finalResult = null;
+
+        if (targetInput !== "") {
+            finalLevel = parseInt(targetInput);
+            finalResult = simulateOptimal(S, W, Q, B, finalLevel);
+        } else {
+            // Binary search tìm max level
+            let lo = 0, hi = 50000;
+            while (lo <= hi) {
+                let mid = Math.floor((lo + hi) / 2);
+                if (simulateOptimal(S, W, Q, B, mid).ok) {
+                    finalLevel = mid;
+                    lo = mid + 1;
+                } else {
+                    hi = mid - 1;
+                }
+            }
+            finalResult = simulateOptimal(S, W, Q, B, finalLevel);
+        }
+
+        if (finalResult.ok) {
+            out.innerHTML = ` <b>Cấp tối đa: <b>${finalLevel}</b><br>
+                             Tổng điểm: ${(finalLevel * 556000).toLocaleString()}<br><br>
+                             <b>Các bước đổi:</b><br>
+                             <div class="log-text">${finalResult.log.length ? finalResult.log.join('\n') : 'Không cần quy đổi'}</div>`;
+            saveHistory(finalLevel);
+        } else {
+            out.innerHTML = `❌ <b>Không đủ tài nguyên!</b><br>Thiếu: Đá ${finalResult.missing.stone}, Gỗ ${finalResult.missing.wood}, Quặng ${finalResult.missing.ore}`;
+        }
+        renderHistory();
+    }
+
+    function saveHistory(lv) {
+        let history = JSON.parse(localStorage.getItem("historyCompute") || "[]");
+        history.push({
+            time: new Date().toLocaleString("vi-VN"),
+            level: lv,
+            point: lv * 556
+        });
+        if (history.length > 10) history.shift();
+        localStorage.setItem("historyCompute", JSON.stringify(history));
+    }
+
+    function renderHistory() {
+        const box = document.getElementById("historyBox");
+        let history = JSON.parse(localStorage.getItem("historyCompute") || "[]");
+        if (history.length === 0) return;
+        box.innerHTML = history.reverse().map(h => `
+            <div class="history-item">
+                🕒 ${h.time} | <b>Lv: ${h.level}</b> | ⭐ ${h.point.toLocaleString()}đ
+            </div>
+        `).join('');
+    }
+
+    function clearHistory() {
+        if(confirm("Xóa lịch sử?")) {
+            localStorage.removeItem("historyCompute");
+            document.getElementById("historyBox").innerHTML = "<i>Chưa có dữ liệu</i>";
+        }
+    }
+
+    // Load history khi tab được tải
+    renderHistory();
+</script>
