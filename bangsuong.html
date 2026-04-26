@@ -78,15 +78,81 @@
 </div>
 
 <script>
-    // Tự động chạy khi Tab được load qua Fetch
+    // 1. Hàm khởi tạo - Chạy ngay khi tab được nạp
     (function initIce() {
-        // Set ngày hiện tại
         document.getElementById('iceDate').valueAsDate = new Date();
         loadIceOptions();
         renderIceTable();
     })();
 
-    function addNewIceAcc() {
+    // 2. GẮN HÀM XUẤT EXCEL VÀO WINDOW ĐỂ NÚT BẤM CÓ THỂ GỌI ĐƯỢC
+    window.exportIceToExcel = async function() {
+        // Kiểm tra dữ liệu
+        const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+        if (data.length === 0) {
+            alert("Không có dữ liệu để xuất!");
+            return;
+        }
+
+        // Kiểm tra thư viện ExcelJS
+        const LIB_EXCEL = window.ExcelJS;
+        if (!LIB_EXCEL) {
+            alert("Lỗi: Không tìm thấy thư viện ExcelJS. Hãy kiểm tra file index.html");
+            return;
+        }
+
+        try {
+            const workbook = new LIB_EXCEL.Workbook();
+            const sheet = workbook.addWorksheet('Băng Sương');
+
+            sheet.columns = [
+                { header: 'Tài khoản', key: 'acc', width: 25 },
+                { header: 'Ngày', key: 'date', width: 15 },
+                { header: 'Mùa', key: 'season', width: 12 },
+                { header: 'Level', key: 'lv', width: 15 }
+            ];
+
+            // Header in đậm
+            sheet.getRow(1).font = { bold: true };
+
+            data.forEach(r => {
+                const row = sheet.addRow({
+                    acc: r.acc,
+                    date: r.date,
+                    season: "Mùa " + r.season,
+                    lv: r.lv
+                });
+
+                // Xử lý ô Level có chữ 'max'
+                if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
+                    const cell = row.getCell('lv');
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+                    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                }
+            });
+
+            // Ghi file
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            // Sử dụng FileSaver (saveAs) hoặc tạo link tải
+            if (typeof saveAs !== 'undefined') {
+                saveAs(blob, "ThongKe_BangSuong.xlsx");
+            } else {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "BangSuong.xlsx";
+                a.click();
+                window.URL.revokeObjectURL(url);
+            }
+        } catch (err) {
+            alert("Lỗi Excel: " + err.message);
+        }
+    };
+
+    // Các hàm phụ trợ khác (Cũng nên gắn window nếu nút bấm gọi)
+    window.addNewIceAcc = function() {
         const name = document.getElementById('newIceAcc').value.trim();
         if (!name) return;
         let accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
@@ -96,7 +162,7 @@
             document.getElementById('newIceAcc').value = '';
             loadIceOptions();
         }
-    }
+    };
 
     function loadIceOptions() {
         const select = document.getElementById('selectIceAcc');
@@ -104,17 +170,12 @@
         select.innerHTML = accs.map(a => `<option value="${a}">${a}</option>`).join('');
     }
 
-    function saveIceRecord() {
+    window.saveIceRecord = function() {
         const acc = document.getElementById('selectIceAcc').value;
         const date = document.getElementById('iceDate').value;
         const lv = document.getElementById('iceLvInput').value.trim();
-        
-        if (!acc || !lv) {
-            alert("Thiếu thông tin!");
-            return;
-        }
+        if (!acc || !lv) return alert("Thiếu thông tin!");
 
-        // Tính mùa từ gốc 13/04/2026 (Mùa 25)
         const startDate = new Date('2026-04-13');
         const diffDays = Math.floor((new Date(date) - startDate) / (1000 * 60 * 60 * 24));
         const season = diffDays < 0 ? "N/A" : 25 + Math.floor(diffDays / 28);
@@ -123,112 +184,30 @@
         let data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
         data.unshift(record);
         localStorage.setItem('ice_records_data', JSON.stringify(data));
-        
         document.getElementById('iceLvInput').value = '';
         renderIceTable();
-    }
+    };
 
     function renderIceTable() {
         const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
         const tbody = document.getElementById('iceTableBody');
-        
         tbody.innerHTML = data.map(r => {
             const isMax = r.lv.toLowerCase().includes('max');
-            const d = new Date(r.date);
-            const dateStr = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear().toString().slice(-2)}`;
-
-            return `
-                <tr>
-                    <td><b>${r.acc}</b></td>
-                    <td>${dateStr}</td>
-                    <td>Mùa ${r.season}</td>
-                    <td class="${isMax ? 'cell-max' : ''}">${r.lv}</td>
-                    <td><span class="btn-del-bs" onclick="deleteIceRecord(${r.id})">✕</span></td>
-                </tr>
-            `;
+            return `<tr>
+                <td><b>${r.acc}</b></td>
+                <td>${r.date}</td>
+                <td>Mùa ${r.season}</td>
+                <td class="${isMax ? 'cell-max' : ''}">${r.lv}</td>
+                <td><span class="btn-del-bs" onclick="deleteIceRecord(${r.id})">✕</span></td>
+            </tr>`;
         }).join('');
     }
 
-    function deleteIceRecord(id) {
-        if (!confirm("Xóa dòng này?")) return;
+    window.deleteIceRecord = function(id) {
+        if (!confirm("Xóa?")) return;
         let data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
         data = data.filter(r => r.id !== id);
         localStorage.setItem('ice_records_data', JSON.stringify(data));
         renderIceTable();
-    }
-
-    async function exportIceToExcel() {
-    // 1. Kiểm tra dữ liệu
-    const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
-    if (data.length === 0) {
-        alert("Không có dữ liệu để xuất!");
-        return;
-    }
-
-    // 2. Kiểm tra thư viện (Quan trọng)
-    const EXCEL_LIB = window.ExcelJS || (typeof ExcelJS !== 'undefined' ? ExcelJS : null);
-    if (!EXCEL_LIB) {
-        alert("Lỗi: Thư viện ExcelJS chưa được tải. Hãy kiểm tra lại file index.html");
-        return;
-    }
-
-    try {
-        const workbook = new EXCEL_LIB.Workbook();
-        const sheet = workbook.addWorksheet('BangSuong');
-
-        sheet.columns = [
-            { header: 'Tài khoản', key: 'acc', width: 25 },
-            { header: 'Ngày', key: 'date', width: 15 },
-            { header: 'Mùa', key: 'season', width: 15 },
-            { header: 'Level', key: 'lv', width: 15 }
-        ];
-
-        // Định dạng dòng đầu tiên (Header)
-        sheet.getRow(1).font = { bold: true };
-        sheet.getRow(1).alignment = { horizontal: 'center' };
-
-        data.forEach(r => {
-            const row = sheet.addRow({
-                acc: r.acc,
-                date: r.date,
-                season: "Mùa " + r.season,
-                lv: r.lv
-            });
-
-            // Tô màu nếu là 'max'
-            if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
-                const cell = row.getCell('lv');
-                cell.fill = { 
-                    type: 'pattern', 
-                    pattern: 'solid', 
-                    fgColor: { argb: 'FF3B82F6' } 
-                };
-                cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-                cell.alignment = { horizontal: 'center' };
-            }
-        });
-
-        // 3. Xuất file bằng Buffer
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
-        // Sử dụng FileSaver.js (saveAs) đã có ở file index
-        if (typeof saveAs !== 'undefined') {
-            saveAs(blob, `BangSuong_ThongKe_${new Date().getTime()}.xlsx`);
-        } else {
-            // Cách dự phòng nếu FileSaver lỗi
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'BangSuong.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }
-    } catch (error) {
-        console.error("Lỗi xuất Excel:", error);
-        alert("Đã xảy ra lỗi khi tạo file Excel: " + error.message);
-    }
-}
+    };
 </script>
