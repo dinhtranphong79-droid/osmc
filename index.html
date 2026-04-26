@@ -30,42 +30,43 @@
     </div>
 
     <script>
-        function loadTab(tabName, element) {
-    // 1. Cập nhật trạng thái Active cho nút bấm
+       function loadTab(tabName, element) {
     const buttons = document.querySelectorAll('.tab-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
     element.classList.add('active');
 
     const contentDiv = document.getElementById('tab-content');
     
-    // 2. Fetch nội dung từ file .html riêng
     fetch(`${tabName}.html`)
         .then(response => {
             if (!response.ok) throw new Error(`Không tìm thấy file ${tabName}.html`);
             return response.text();
         })
         .then(data => {
-            // Chèn HTML vào vùng nội dung
             contentDiv.innerHTML = data;
 
-            // 3. Kích hoạt lại script bên trong file vừa tải
             const scripts = contentDiv.querySelectorAll("script");
             scripts.forEach(oldScript => {
                 const newScript = document.createElement("script");
 
-                // Sao chép tất cả thuộc tính (src, type, async, v.v.)
                 Array.from(oldScript.attributes).forEach(attr => {
                     newScript.setAttribute(attr.name, attr.value);
                 });
 
-                // Sao chép nội dung code bên trong (nếu không có src)
                 if (!oldScript.src) {
                     newScript.text = oldScript.innerHTML;
                 }
 
-                // Thực thi script bằng cách chèn vào body rồi xóa ngay để sạch DOM
-                document.body.appendChild(newScript);
-                document.body.removeChild(newScript);
+                // CHỈNH SỬA Ở ĐÂY: Chèn vào head thay vì body và KHÔNG xóa ngay lập tức
+                // Việc chèn vào head giúp các hàm được đăng ký vào window dễ hơn
+                document.head.appendChild(newScript);
+                
+                // Nếu là script chứa code (không phải link src), xóa sau 100ms để đảm bảo đã thực thi
+                if (!oldScript.src) {
+                    setTimeout(() => {
+                        if (document.head.contains(newScript)) document.head.removeChild(newScript);
+                    }, 100);
+                }
             });
         })
         .catch(error => {
