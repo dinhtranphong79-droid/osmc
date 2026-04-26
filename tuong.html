@@ -1,0 +1,245 @@
+<style>
+/* Giữ nguyên CSS gốc của bạn */
+:root{
+  --bg:#ffffff; --card:#f8f8f8; --muted:#555555; --accent:#60a5fa;
+  --fire:#e11d48; --water:#0284c7; --wind:#10b981; --light:#facc15;
+  --dark:#6366f1; --earth:#a16207; --exp:#6b7280;
+}
+.app-tuong { max-width:1100px; margin:0 auto; color:#012; font-family: Inter, sans-serif; }
+.header-tuong { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.grid-tuong { display:grid; grid-template-columns:1fr 360px; gap:16px; }
+.panel-tuong { background:var(--card); padding:14px; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,0.06); }
+.hero-list { display:flex; flex-direction:column; gap:10px; max-height:520px; overflow:auto; }
+.hero { display:grid; grid-template-columns:1fr 100px 100px 120px 80px; gap:8px; align-items:center; padding:8px; border-radius:8px; background:#fff; border:1px solid rgba(0,0,0,0.04); }
+.hero small { color:var(--muted); }
+.hero.fire { border-left:6px solid var(--fire); }
+.hero.cung { border-left:6px solid var(--light); }
+.hero.độc { border-left:6px solid var(--wind); }
+.hero.băng { border-left:6px solid var(--water); }
+.hero.exp { border-left:6px solid var(--exp); }
+.tabs-tuong { display:flex; gap:6px; flex-wrap:wrap; }
+.tab-tuong { padding:8px 12px; border-radius:10px; cursor:pointer; background:#eaeaea; color:var(--muted); border:1px solid rgba(0,0,0,0.06); font-size: 14px; }
+.tab-tuong.active { font-weight:600; color: white; }
+input[type="number"], select, input[type="text"] { width:100%; padding:6px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:transparent; }
+.btn-tuong { padding:8px 10px; border-radius:8px; border:0; cursor:pointer; background:var(--accent); color:#fff; font-weight:600; }
+.btn-tuong.ghost { background:transparent; border:1px solid rgba(0,0,0,0.08); color:var(--muted); }
+.summary-tuong { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.row-tuong { display:flex; justify-content:space-between; align-items:center; }
+.big-tuong { font-size:18px; font-weight:700; }
+
+/* Modal */
+.modal-tuong { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:9999; }
+.modal-content-tuong { background:white; width:95%; max-width:440px; border-radius:18px; padding:0; border:4px solid var(--m-color); }
+.modal-header-tuong { padding:14px 18px; font-size:20px; font-weight:700; color:white; border-radius:14px 14px 0 0; }
+.modal-body-tuong { padding:18px; font-size:16px; line-height:1.5; white-space:pre-line; }
+.modal-footer-tuong { padding:16px; }
+.modal-footer-tuong button { width:100%; padding:12px; background:var(--m-color); color:white; border:none; border-radius:10px; cursor:pointer; }
+.sys-Lửa { --m-color: var(--fire); } .sys-Cung { --m-color: var(--light); } .sys-Độc { --m-color: var(--wind); } .sys-Băng { --m-color: var(--water); } .sys-Exp { --m-color: var(--exp); }
+
+@media (max-width:980px){ .grid-tuong{grid-template-columns:1fr} .hero{grid-template-columns:1fr 90px 80px 80px 70px} }
+</style>
+
+<div class="app-tuong">
+  <header class="header-tuong">
+    <div>
+      <h1 style="font-size:20px;margin:0;">Điểm tướng SSR & Exp</h1>
+      <div style="color:var(--muted);font-size:13px;margin-top:6px">1 thẻ SSR = 14.000 điểm. EXP: B+ 100 / B 700 / SR 3.500.</div>
+    </div>
+    <div class="tabs-tuong" id="tabs-hero"></div>
+  </header>
+
+  <main class="grid-tuong">
+    <section class="panel-tuong">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div><strong id="systemTitle">Lửa</strong></div>
+        <button class="btn-tuong" id="btnCalcAll">Tính toàn bộ</button>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <input id="filterHero" placeholder="Tìm tướng theo tên" type="text" />
+      </div>
+
+      <div class="hero-list" id="heroList"></div>
+    </section>
+
+    <aside class="panel-tuong">
+      <div><strong>Tổng kết</strong></div>
+      <div class="summary-tuong" id="summary"></div>
+    </aside>
+  </main>
+</div>
+
+<div id="resultModal" class="modal-tuong">
+  <div id="modalBox" class="modal-content-tuong">
+    <div id="modalHeader" class="modal-header-tuong">Kết quả</div>
+    <div id="modalBody" class="modal-body-tuong"></div>
+    <div class="modal-footer-tuong">
+      <button onclick="closeModalHero()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+    const COST_ARRAY = {0:[20,20],1:[30,40,50],2:[60,70,80,80],3:[100,110,120,130,140],4:[170,180,190,200,210],5:[]};
+    const CARD_POINT = 14000;
+    const SYSTEMS = ["Lửa","Cung","Độc","Băng"];
+    const EXP_CATS = {"B+":100,"B":700,"SR":3500};
+    
+    const heroesData = {
+      "Lửa": ["Dolvar","Paul","Alex","Allen","Anko","Apollo","Blaise","Brie","Catrina","Christie","Cosette","Dain","Darcy","Daria","Dean","Edmund","Erika","Fiona","Gisele","Gro","Ivy","Kenshiro","Kirona","Kyle","Lovelace","Mirai","Penny","Seraphin","Simon","Sindra","Theodore","Tracy","Vanessa","Wallis"],
+      "Cung": ["Aidan","Alden","Ariza","Authur","Bella","Colin","Doris","Dylan","Eleanora","Fatima","Gabriel","Green","Jennifer","Johannes","Kadir","Kailin","Layla","Livia","Maya","Meg","Mira","Montag","O'Neil","Padme","Pan","Ptolemy","Richard","Ryan","Sahar","Sebastian","Seraphia","Solder","Torvi","Trist"],
+      "Độc": ["Allison","Angelina","Arwin","Benjamin","Blackwell","Boudica","Catherine","Chiyoko","Claudia","Daisy","Elia","Gruen","Issac","Lilith","Lomax","Luvia","Maxwell","Meniere","Morgana","Mycelia","Naga","Pythia","Rila","Rogers","Rosamond","Suad","Tumnus","Viper","Viola","Webster","Wendy"],
+      "Băng": ["Aurora","Christine","Clarence","Enzo","Eslaine","Filius","Hadi","Hana","Hathes","Havik","Jessica","Judy","Keith","Lilani","Loka","Maud","Nathaniel","Nicole","Nina","Nivea","Olaf","Parr","Paula","Pedra","Ralph","Rebecca","Rudolph","Selene","Trishy","Vera","Ao Deng","Ao Yue"]
+    };
+    const expList = { "B+": ["Daniel"], "B": ["Anton","Peter","Etley"], "SR": ["Alucard","Samar","Harold","Kris","Merlin","Ophelia","Arwyn"]};
+    
+    const LS_KEY="hero_upgrader_state_v2";
+    const $ = id => document.getElementById(id);
+    let state = { heroes:[], activeTab: SYSTEMS[0] };
+
+    function formatNumber(n){ return Number(n).toLocaleString("vi-VN"); }
+    function maxBarForStar(st){ return (COST_ARRAY[st]||[]).length; }
+    function costFor(st,bar){ return (COST_ARRAY[st]||[])[bar]||null; }
+    
+    function defaultHeroData(name, system){
+        let sys = system;
+        for(const cat in expList) if(expList[cat].includes(name)) sys="Exp";
+        return { id: "h-"+Math.random().toString(36).slice(2,9), name, system: sys, current_star: 0, current_bar: 0, cards_owned: 0 };
+    }
+
+    function calculateUpgrade(hero){
+      if(hero.system==="Exp"){
+        let rank=null; for(const cat in expList) if(expList[cat].includes(hero.name)) rank=cat;
+        let per = rank? EXP_CATS[rank]:0;
+        let cards = Number(hero.cards_owned)||0;
+        return {isExp:true,exp_rank:rank,exp_per_card:per,exp_points:cards*per,cards_consumed:cards};
+      }
+      let star=hero.current_star||0, bar=hero.current_bar||0, cards=hero.cards_owned||0, consumed=0;
+      while(cards>0){
+        if(star>=5) break;
+        const maxBar=maxBarForStar(star);
+        if(bar>=maxBar){ star++; bar=0; continue; }
+        const needed=costFor(star,bar);
+        if(needed===null || cards < needed) break;
+        cards-=needed; consumed+=needed; bar++;
+      }
+      let ms=0, s=star, b=bar;
+      while(s<5){
+        const maxBar=maxBarForStar(s);
+        if(b>=maxBar){ s++; b=0; continue;}
+        const need=costFor(s,b);
+        if(need===null){ ms=Infinity; break; }
+        ms+=need; b++;
+      }
+      return {isExp:false,final_star:star,final_bar:bar,cards_consumed:consumed,cards_left:cards,missing_to_5:ms};
+    }
+
+    window.closeModalHero = function(){ $("resultModal").style.display="none"; }
+
+    function showModalResult(hero){
+      const res = calculateUpgrade(hero);
+      const modal=$("resultModal"), header=$("modalHeader"), body=$("modalBody"), box=$("modalBox");
+      box.className="modal-content-tuong sys-"+(res.isExp ? "Exp" : hero.system);
+      
+      if(res.isExp){
+        header.innerText = `Tướng EXP – ${hero.name}`;
+        body.innerText = `Hạng: ${res.exp_rank}\nSố thẻ: ${res.cards_consumed}\nĐiểm EXP: ${formatNumber(res.exp_points)}`;
+      } else {
+        header.innerText = `${hero.name} – Kết quả`;
+        const used_pts = res.cards_consumed * CARD_POINT;
+        const left_pts = (res.final_star >= 5 ? res.cards_left : 0) * CARD_POINT;
+        body.innerText = `Nâng đến: ${res.final_star}★ bậc ${res.final_bar}\n\nThẻ dùng: ${res.cards_consumed} (Points: ${formatNumber(used_pts)})\nThẻ dư: ${res.final_star >= 5 ? res.cards_left : 0}\n\nTổng điểm: ${formatNumber(used_pts + left_pts)}\nThiếu để 5★: ${res.missing_to_5} thẻ`;
+      }
+      modal.style.display="flex";
+    }
+
+    function renderHeroList(){
+      const list=$("heroList"); list.innerHTML="";
+      const f=($("filterHero").value||"").trim().toLowerCase();
+      const currentSet = SYSTEMS.includes(state.activeTab) ? heroesData[state.activeTab] : expList[state.activeTab];
+      
+      currentSet.forEach(n => {
+        if(f && !n.toLowerCase().includes(f)) return;
+        const h = state.heroes.find(x => x.name === n);
+        if(!h) return;
+
+        const box = document.createElement("div");
+        box.className = "hero " + (h.system==="Exp" ? "exp" : (h.system==="Lửa"?"fire":h.system==="Cung"?"cung":h.system==="Độc"?"độc":"băng"));
+        
+        box.innerHTML = `
+            <div><div style="font-weight:600">${h.name}</div><small>${h.system}</small></div>
+            <div>${h.system==="Exp" ? "" : `<select class="sel-star"></select>`}</div>
+            <div>${h.system==="Exp" ? "" : `<select class="sel-bar"></select>`}</div>
+            <div><input type="number" class="in-cards" value="${h.cards_owned}" min="0"></div>
+            <div class="hero-ops"><button class="btn-tuong ghost btn-calc-one">Tính</button></div>
+        `;
+
+        if(h.system !== "Exp"){
+            const sSel = box.querySelector(".sel-star");
+            sSel.innerHTML = Array.from({length:6}).map((_,i)=>`<option value="${i}" ${i===h.current_star?'selected':''}>${i}★</option>`).join("");
+            sSel.onchange = (e) => { 
+                h.current_star = parseInt(e.target.value); 
+                h.current_bar = 0; 
+                saveState(); renderHeroList(); renderSummary();
+            };
+
+            const bSel = box.querySelector(".sel-bar");
+            bSel.innerHTML = Array.from({length:maxBarForStar(h.current_star)+1}).map((_,i)=>`<option value="${i}" ${i===h.current_bar?'selected':''}>Bậc ${i}</option>`).join("");
+            bSel.onchange = (e) => { h.current_bar = parseInt(e.target.value); saveState(); renderSummary(); };
+        }
+
+        box.querySelector(".in-cards").onchange = (e) => { h.cards_owned = parseInt(e.target.value)||0; saveState(); renderSummary(); };
+        box.querySelector(".btn-calc-one").onclick = () => showModalResult(h);
+        list.appendChild(box);
+      });
+    }
+
+    function renderSummary(){
+      const box=$("summary"); box.innerHTML="";
+      const totals={}; [...SYSTEMS, ...Object.keys(expList)].forEach(s=>totals[s]=0);
+      let grandTotal = 0;
+
+      state.heroes.forEach(h=>{
+        const res = calculateUpgrade(h);
+        const pts = res.isExp ? res.exp_points : (res.cards_consumed + (res.final_star >= 5 ? res.cards_left : 0)) * CARD_POINT;
+        const key = h.system === "Exp" ? res.exp_rank : h.system;
+        if(totals.hasOwnProperty(key)) totals[key] += pts;
+        grandTotal += pts;
+      });
+
+      for(const s in totals){
+        box.innerHTML += `<div class="row-tuong"><span>${s}</span><span class="big-tuong">${formatNumber(totals[s])}</span></div>`;
+      }
+      box.innerHTML += `<div class="row-tuong" style="border-top:1px solid #ccc; font-weight:700; margin-top:5px; padding-top:5px;"><span>Tổng</span><span class="big-tuong">${formatNumber(grandTotal)}</span></div>`;
+    }
+
+    function renderTabs(){
+      const tabs=$("tabs-hero"); tabs.innerHTML="";
+      [...SYSTEMS, ...Object.keys(expList)].forEach(s=>{
+        const t=document.createElement("div"); 
+        t.className="tab-tuong"+(state.activeTab===s?" active":"");
+        t.textContent=s;
+        const color=s==="Lửa"?"var(--fire)":s==="Cung"?"var(--light)":s==="Độc"?"var(--wind)":s==="Băng"?"var(--water)":"var(--exp)";
+        if(state.activeTab===s) t.style.background = color;
+        t.onclick=()=>{ state.activeTab=s; renderTabs(); renderHeroList(); $("systemTitle").innerText=s; };
+        tabs.appendChild(t);
+      });
+    }
+
+    function saveState(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); }
+    function loadState(){
+      const data=localStorage.getItem(LS_KEY);
+      if(data) state=JSON.parse(data);
+      [...SYSTEMS, ...Object.keys(expList)].forEach(s=>{
+        const names = heroesData[s] || expList[s];
+        names.forEach(n => { if(!state.heroes.find(h=>h.name===n)) state.heroes.push(defaultHeroData(n, s)); });
+      });
+    }
+
+    $("filterHero").oninput=renderHeroList;
+    $("btnCalcAll").onclick=renderSummary;
+    
+    loadState(); renderTabs(); renderHeroList(); renderSummary();
+})();
+</script>
