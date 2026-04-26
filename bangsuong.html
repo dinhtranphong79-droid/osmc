@@ -158,17 +158,34 @@
     }
 
     async function exportIceToExcel() {
-        const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
-        if (data.length === 0) return;
+    // 1. Kiểm tra dữ liệu
+    const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
+    if (data.length === 0) {
+        alert("Không có dữ liệu để xuất!");
+        return;
+    }
 
-        const workbook = new ExcelJS.Workbook();
+    // 2. Kiểm tra thư viện (Quan trọng)
+    const EXCEL_LIB = window.ExcelJS || (typeof ExcelJS !== 'undefined' ? ExcelJS : null);
+    if (!EXCEL_LIB) {
+        alert("Lỗi: Thư viện ExcelJS chưa được tải. Hãy kiểm tra lại file index.html");
+        return;
+    }
+
+    try {
+        const workbook = new EXCEL_LIB.Workbook();
         const sheet = workbook.addWorksheet('BangSuong');
+
         sheet.columns = [
-            { header: 'Tài khoản', key: 'acc', width: 20 },
+            { header: 'Tài khoản', key: 'acc', width: 25 },
             { header: 'Ngày', key: 'date', width: 15 },
-            { header: 'Mùa', key: 'season', width: 10 },
+            { header: 'Mùa', key: 'season', width: 15 },
             { header: 'Level', key: 'lv', width: 15 }
         ];
+
+        // Định dạng dòng đầu tiên (Header)
+        sheet.getRow(1).font = { bold: true };
+        sheet.getRow(1).alignment = { horizontal: 'center' };
 
         data.forEach(r => {
             const row = sheet.addRow({
@@ -177,18 +194,41 @@
                 season: "Mùa " + r.season,
                 lv: r.lv
             });
-            if (r.lv.toLowerCase().includes('max')) {
+
+            // Tô màu nếu là 'max'
+            if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
                 const cell = row.getCell('lv');
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
+                cell.fill = { 
+                    type: 'pattern', 
+                    pattern: 'solid', 
+                    fgColor: { argb: 'FF3B82F6' } 
+                };
                 cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                cell.alignment = { horizontal: 'center' };
             }
         });
 
+        // 3. Xuất file bằng Buffer
         const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/octet-stream' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'BangSuong.xlsx';
-        a.click();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        // Sử dụng FileSaver.js (saveAs) đã có ở file index
+        if (typeof saveAs !== 'undefined') {
+            saveAs(blob, `BangSuong_ThongKe_${new Date().getTime()}.xlsx`);
+        } else {
+            // Cách dự phòng nếu FileSaver lỗi
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'BangSuong.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+    } catch (error) {
+        console.error("Lỗi xuất Excel:", error);
+        alert("Đã xảy ra lỗi khi tạo file Excel: " + error.message);
     }
+}
 </script>
