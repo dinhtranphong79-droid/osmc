@@ -1,0 +1,198 @@
+<style>
+    .bs-card { padding: 10px; font-family: sans-serif; max-width: 800px; margin: auto; }
+    .bs-section { margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 8px; border: 1px solid #ddd; }
+    .bs-form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: flex-end; }
+    .bs-input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+    
+    /* Bảng tính AP */
+    .ap-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .ap-table th { background: #4f46e5; color: white; padding: 10px; font-size: 14px; border: 1px solid #ddd; }
+    .ap-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; background: #f8fafc; }
+    
+    .ap-qty { width: 70px; padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold; }
+    .ap-extra { width: 90px; padding: 8px; text-align: center; border: 2px solid #3b82f6; border-radius: 4px; font-weight: bold; background: #eff6ff; }
+    
+    .ap-total-box { 
+        margin-top: 15px; padding: 20px; background: #1e293b; color: #fbbf24; 
+        border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 1.6em; font-weight: bold; }
+    #apFormula { font-size: 0.9em; color: #94a3b8; margin-top: 8px; font-weight: normal; font-style: italic; border-top: 1px solid #334155; padding-top: 8px; }
+
+    .btn-bs { padding: 8px 15px; cursor: pointer; border: none; background: #10b981; color: white; border-radius: 5px; font-weight: bold; }
+    .btn-del-acc { background: #ef4444; color: white; padding: 5px 10px; font-size: 12px; border-radius: 4px; cursor: pointer; border: none; }
+</style>
+
+<div class="bs-card">
+    <h2 style="text-align: center; color: #1e293b;">ap</h2>
+
+    <div class="bs-section">
+        <div class="bs-form">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 5px;">
+                <label><b>Chọn Tài Khoản:</b></label>
+                <div style="display: flex; gap: 10px;">
+                    <select id="selectIceAcc" class="bs-input" style="flex: 1;" onchange="changeAccContext()"></select>
+                    <button class="btn-del-acc" onclick="deleteCurrentAcc()">Xóa acc này</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 5px; align-items: flex-end;">
+                <input type="text" id="newIceAcc" class="bs-input" placeholder="Tên acc mới...">
+                <button class="btn-bs" onclick="addNewIceAcc()"> Thêm acc</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bs-section" style="border-top: 5px solid #4f46e5;">
+        <h3 style="margin-top: 0; color: #4338ca;">Tính ap</h3>
+        <table class="ap-table">
+            <thead>
+                <tr>
+                    <th>x200</th>
+                    <th>x100</th>
+                    <th>x50</th>
+                    <th>x20</th>
+                    <th>x10</th>
+                    <th>x5</th>
+                    <th style="background: #2563eb;">ap ngoài</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="number" class="ap-qty" data-val="200" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" class="ap-qty" data-val="100" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" class="ap-qty" data-val="50" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" class="ap-qty" data-val="20" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" class="ap-qty" data-val="10" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" class="ap-qty" data-val="5" value="0" oninput="calcAP()"></td>
+                    <td><input type="number" id="apExtra" class="ap-extra" value="0" oninput="calcAP()"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ap-total-box">
+            <div class="total-row">
+                <span>Tổng:</span>
+                <span id="totalAPDisplay">0</span>
+            </div>
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin-top: 10px;">* Hệ thống tự động lưu dữ liệu khi nhập số</p>
+    </div>
+</div>
+
+<script>
+    // --- KHỞI TẠO ---
+    window.onload = function() {
+        loadIceOptions();
+        changeAccContext();
+    };
+
+    // --- QUẢN LÝ ACC ---
+    function loadIceOptions() {
+        const select = document.getElementById('selectIceAcc');
+        const accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
+        select.innerHTML = accs.map(a => `<option value="${a}">${a}</option>`).join('');
+    }
+
+    window.addNewIceAcc = function() {
+        const nameInput = document.getElementById('newIceAcc');
+        const name = nameInput.value.trim();
+        if (!name) return;
+
+        let accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
+        if (!accs.includes(name)) {
+            accs.push(name);
+            localStorage.setItem('ice_acc_list', JSON.stringify(accs));
+            loadIceOptions();
+            document.getElementById('selectIceAcc').value = name;
+            changeAccContext();
+        }
+        nameInput.value = '';
+    };
+
+    window.deleteCurrentAcc = function() {
+        const currentAcc = document.getElementById('selectIceAcc').value;
+        if (!currentAcc || !confirm(`Xóa toàn bộ dữ liệu của tài khoản: ${currentAcc}?`)) return;
+
+        // Xóa khỏi danh sách tên
+        let accs = JSON.parse(localStorage.getItem('ice_acc_list') || '[]');
+        accs = accs.filter(a => a !== currentAcc);
+        localStorage.setItem('ice_acc_list', JSON.stringify(accs));
+
+        // Xóa dữ liệu AP
+        let allAPData = JSON.parse(localStorage.getItem('ice_ap_storage') || '{}');
+        delete allAPData[currentAcc];
+        localStorage.setItem('ice_ap_storage', JSON.stringify(allAPData));
+
+        loadIceOptions();
+        changeAccContext();
+    };
+
+    // --- LOGIC TÍNH & LƯU AP ---
+    window.calcAP = function() {
+        const currentAcc = document.getElementById('selectIceAcc').value;
+        if (!currentAcc) return;
+
+        let total = 0;
+        let formulaParts = [];
+        let storageValues = {};
+
+        // 1. Tính các ô nhân
+        const qtyInputs = document.querySelectorAll('.ap-qty');
+        qtyInputs.forEach(input => {
+            const multi = Number(input.getAttribute('data-val'));
+            const qty = Number(input.value) || 0;
+            const sub = multi * qty;
+            
+            total += sub;
+            storageValues[multi] = qty;
+            if (qty > 0) formulaParts.push(`${multi}×${qty}`);
+        });
+
+        // 2. Ô cộng dư (x1)
+        const extra = Number(document.getElementById('apExtra').value) || 0;
+        total += extra;
+        if (extra > 0) formulaParts.push(`${extra}`);
+
+        // 3. Cập nhật giao diện
+        document.getElementById('totalAPDisplay').innerText = total.toLocaleString();
+       
+
+        // 4. Lưu trực tiếp vào LocalStorage
+        let allAPData = JSON.parse(localStorage.getItem('ice_ap_storage') || '{}');
+        allAPData[currentAcc] = {
+            values: storageValues,
+            extra: extra,
+            total: total
+        };
+        localStorage.setItem('ice_ap_storage', JSON.stringify(allAPData));
+    };
+
+    // --- CHUYỂN ĐỔI GIỮA CÁC ACC ---
+    window.changeAccContext = function() {
+        const currentAcc = document.getElementById('selectIceAcc').value;
+        if (!currentAcc) {
+            document.querySelectorAll('.ap-qty').forEach(input => input.value = 0);
+            document.getElementById('apExtra').value = 0;
+            document.getElementById('totalAPDisplay').innerText = "0";
+            document.getElementById('apFormula').innerText = "Chi tiết: 0";
+            return;
+        }
+
+        const allAPData = JSON.parse(localStorage.getItem('ice_ap_storage') || '{}');
+        const data = allAPData[currentAcc];
+
+        if (data) {
+            document.querySelectorAll('.ap-qty').forEach(input => {
+                const val = input.getAttribute('data-val');
+                input.value = data.values[val] || 0;
+            });
+            document.getElementById('apExtra').value = data.extra || 0;
+        } else {
+            // Reset nếu chưa có dữ liệu AP cho Acc này
+            document.querySelectorAll('.ap-qty').forEach(input => input.value = 0);
+            document.getElementById('apExtra').value = 0;
+        }
+        
+        calcAP(); // Gọi lại để hiển thị tổng và chi tiết
+    };
+</script>
