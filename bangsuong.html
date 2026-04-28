@@ -17,7 +17,6 @@
     .btn-bs:hover { background: #bbb; }
     .btn-save { background: #007bff; color: white; }
     .btn-save:hover { background: #0056b3; }
-    .btn-excel { background: #28a745; color: white; }
 
     /* Highlight Xanh Biển cho chữ MAX */
     .cell-max { 
@@ -59,7 +58,6 @@
                 <input type="text" id="iceLvInput" class="bs-input" placeholder="Nhập level (max)">
             </div>
             <button class="btn-bs btn-save" onclick="saveIceRecord()">Ghi Lại</button>
-            <button class="btn-bs btn-excel" onclick="exportIceToExcel()">Xuất Excel</button>
         </div>
     </div>
 
@@ -78,71 +76,14 @@
 </div>
 
 <script>
-    // 1. Hàm khởi tạo - Chạy ngay khi tab được nạp
+    // 1. Hàm khởi tạo
     (function initIce() {
         document.getElementById('iceDate').valueAsDate = new Date();
         loadIceOptions();
         renderIceTable();
     })();
 
-    // 2. GẮN HÀM XUẤT EXCEL VÀO WINDOW ĐỂ NÚT BẤM CÓ THỂ GỌI ĐƯỢC
-window.exportIceToExcel = async function() {
-    // 1. Kiểm tra thư viện bằng nhiều cách khác nhau
-    const LIB = window.ExcelJS || (typeof ExcelJS !== 'undefined' ? ExcelJS : null);
-
-    if (!LIB) {
-        alert("Lỗi: Trình duyệt đang chặn thư viện ExcelJS. \n\nCách sửa: Nhấn vào biểu tượng Cái Khiên (hoặc Ổ Khóa) bên trái thanh địa chỉ và chọn 'Tắt chặn theo dõi' (Tracking Prevention) cho trang này.");
-        return;
-    }
-
-    try {
-        const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
-        if (data.length === 0) return alert("Không có dữ liệu!");
-
-        const workbook = new LIB.Workbook();
-        const sheet = workbook.addWorksheet('BangSuong');
-
-        sheet.columns = [
-            { header: 'Tài khoản', key: 'acc', width: 20 },
-            { header: 'Ngày', key: 'date', width: 15 },
-            { header: 'Mùa', key: 'season', width: 10 },
-            { header: 'Level', key: 'lv', width: 15 }
-        ];
-
-        data.forEach(r => {
-            const row = sheet.addRow({
-                acc: r.acc,
-                date: r.date,
-                season: "Mùa " + r.season,
-                lv: r.lv
-            });
-            // Tô màu xanh cho ô MAX
-            if (r.lv && r.lv.toString().toLowerCase().includes('max')) {
-                const cell = row.getCell('lv');
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3B82F6' } };
-                cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-            }
-        });
-
-        const buffer = await workbook.xlsx.writeBuffer();
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
-        // Dùng FileSaver (saveAs)
-        if (window.saveAs) {
-            window.saveAs(blob, "ThongKe_BangSuong.xlsx");
-        } else {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'BangSuong.xlsx';
-            a.click();
-        }
-    } catch (err) {
-        alert("Lỗi hệ thống: " + err.message);
-    }
-};
-
-    // Các hàm phụ trợ khác (Cũng nên gắn window nếu nút bấm gọi)
+    // 2. Thêm tài khoản mới
     window.addNewIceAcc = function() {
         const name = document.getElementById('newIceAcc').value.trim();
         if (!name) return;
@@ -161,6 +102,7 @@ window.exportIceToExcel = async function() {
         select.innerHTML = accs.map(a => `<option value="${a}">${a}</option>`).join('');
     }
 
+    // 3. Lưu bản ghi
     window.saveIceRecord = function() {
         const acc = document.getElementById('selectIceAcc').value;
         const date = document.getElementById('iceDate').value;
@@ -179,6 +121,7 @@ window.exportIceToExcel = async function() {
         renderIceTable();
     };
 
+    // 4. Hiển thị bảng
     function renderIceTable() {
         const data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
         const tbody = document.getElementById('iceTableBody');
@@ -194,6 +137,7 @@ window.exportIceToExcel = async function() {
         }).join('');
     }
 
+    // 5. Xóa bản ghi
     window.deleteIceRecord = function(id) {
         if (!confirm("Xóa?")) return;
         let data = JSON.parse(localStorage.getItem('ice_records_data') || '[]');
