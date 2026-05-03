@@ -1,117 +1,97 @@
 <style>
-    .cannon-container { max-width: 100%; margin: auto; background: white; border-radius: 12px; }
-    .input-group { margin-bottom: 12px; display: flex; flex-direction: column; }
-    .input-group label { font-weight: bold; margin-bottom: 5px; color: #333; }
+    .cannon-container { max-width: 100%; margin: auto; background: #f8f9fa; border-radius: 12px; font-family: -apple-system, sans-serif; padding: 10px; }
+    .input-group { margin-bottom: 10px; display: flex; flex-direction: column; }
+    .input-group label { font-weight: bold; margin-bottom: 4px; color: #333; font-size: 14px; }
     .cannon-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
     
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-    .btn-calc { padding: 12px; background: #2563eb; color: white; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-    .btn-clear { padding: 12px; background: #ef4444; color: white; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; }
-    .btn-calc:hover, .btn-clear:hover { opacity: 0.9; }
+    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    .btn-calc { padding: 15px; background: #3366cc; color: white; font-size: 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; }
+    .btn-clear { padding: 15px; background: #f44336; color: white; font-size: 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; }
 
-    .result-box { margin-top: 20px; padding: 15px; background: #f0f7ff; border-radius: 10px; border-left: 5px solid #2563eb; display: none; }
-    .log-text { white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; background: #eee; padding: 10px; border-radius: 5px; font-size: 13px; }
-    .history-section { margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
-    .history-item { font-size: 14px; margin-bottom: 10px; padding: 8px; background: #fafafa; border-radius: 5px; }
+    .result-box { margin-top: 20px; padding: 20px; background: white; border-radius: 15px; border: 1px solid #e0e0e0; display: none; line-height: 1.6; color: #1a1a1a; }
+    .result-box b { font-size: 17px; }
+    
+    .history-section { margin-top: 20px; background: white; border-radius: 15px; border: 1px solid #e0e0e0; padding: 15px; }
+    .history-header { font-size: 18px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    
+    #historyBox { max-height: 500px; overflow-y: auto; }
+    .history-item { padding: 12px 0; border-bottom: 1px solid #eee; font-size: 15px; line-height: 1.5; position: relative; }
+    .history-item:last-child { border-bottom: none; }
+    
+    .icon-text { display: flex; align-items: center; gap: 5px; margin: 2px 0; }
+    /* Style cho số thứ tự # */
+    .history-index { color: #999; font-weight: bold; font-size: 14px; margin-right: 8px; }
 </style>
 
 <div class="cannon-container">
-    <h3>Level pháo</h3>
-    
-    <div class="input-group">
-        <label> Đá</label>
-        <input type="number" id="stone" class="cannon-input" value="0">
-    </div>
-    <div class="input-group">
-        <label> Gỗ </label>
-        <input type="number" id="wood" class="cannon-input" value="0">
-    </div>
-    <div class="input-group">
-        <label> Quặng </label>
-        <input type="number" id="ore" class="cannon-input" value="0">
-    </div>
-    <div class="input-group">
-        <label> Hộp pháo</label>
-        <input type="number" id="boxes" class="cannon-input" value="0">
-    </div>
-    <div class="input-group">
-        <label> Cấp mục tiêu </label>
-        <input type="number" id="targetLevel" class="cannon-input" placeholder="Để trống nếu muốn tính cấp tối đa">
-    </div>
+    <div class="input-group"><label>Đá</label><input type="number" id="stone" class="cannon-input" value="0"></div>
+    <div class="input-group"><label>Gỗ</label><input type="number" id="wood" class="cannon-input" value="0"></div>
+    <div class="input-group"><label>Quặng</label><input type="number" id="ore" class="cannon-input" value="0"></div>
+    <div class="input-group"><label>Hộp pháo</label><input type="number" id="boxes" class="cannon-input" value="0"></div>
+    <div class="input-group"><label>Cấp mục tiêu</label><input type="number" id="targetLevel" class="cannon-input" placeholder="Để trống nếu muốn tính cấp tối đa"></div>
 
     <div class="btn-group">
-        <button class="btn-calc" onclick="computeCannon()">Tính </button>
+        <button class="btn-calc" onclick="computeCannon()">Tính</button>
         <button class="btn-clear" onclick="clearHistory()">Xóa lịch sử</button>
     </div>
 
     <div id="output" class="result-box"></div>
 
     <div class="history-section">
-        <strong>Lịch sử tính toán:</strong>
+        <div class="history-header">
+            <span>Lịch sử gần nhất:</span>
+            <span id="historyCount" style="font-size: 14px; color: #666; font-weight: normal;">(0/100)</span>
+        </div>
         <div id="historyBox"><i>Chưa có dữ liệu</i></div>
     </div>
 </div>
 
 <script>
-    // Hàm lấy giá trị input
+    const START_DATE = new Date('2026-04-13T00:00:00');
+    const START_SEASON = 25;
+
     function getVal(id) {
         let v = parseInt(document.getElementById(id).value);
         return isNaN(v) || v < 0 ? 0 : v;
     }
 
-    // Thuật toán mô phỏng tối ưu
+    function calculateGameSeason(now) {
+        const diffInMs = now - START_DATE;
+        if (diffInMs < 0) return "Trước mùa 25";
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        const seasonOffset = Math.floor(diffInDays / 28);
+        const currentSeason = START_SEASON + seasonOffset;
+        const remainingDays = diffInDays % 28;
+        const currentWeek = Math.floor(remainingDays / 7) + 1;
+        return `Mùa ${currentSeason} - Tuần ${currentWeek}`;
+    }
+
     function simulateOptimal(S, W, Q, B, lv) {
-        if (lv <= 0) return { ok: true, log: [], remaining: { stone: S, wood: W, ore: Q } };
-        
+        if (lv <= 0) return { ok: true, log: [], rem: { s: S, w: W, q: Q } };
         let stone = S, wood = W, ore = Q, box = B, log = [];
-        const needStone = 1260 * lv;
-        const needWood = 340 * lv;
-        const needOre = 130 * lv;
+        const nS = 1260 * lv, nW = 340 * lv, nQ = 130 * lv;
 
-        // 1. Dùng hộp pháo ưu tiên Quặng > Gỗ > Đá
-        let boxForOre = Math.min(box, Math.max(0, needOre - ore));
-        if (boxForOre > 0) {
-            log.push(`Dùng ${boxForOre} hộp → +${boxForOre} quặng`);
-            ore += boxForOre; box -= boxForOre;
-        }
-        let boxForWood = Math.min(box, Math.ceil(Math.max(0, needWood - wood) / 4));
-        if (boxForWood > 0) {
-            log.push(`Dùng ${boxForWood} hộp → +${boxForWood * 4} gỗ`);
-            wood += boxForWood * 4; box -= boxForWood;
-        }
-        if (box > 0) {
-            log.push(`Dùng ${box} hộp → +${box * 20} đá`);
-            stone += box * 20; box = 0;
-        }
+        let bQ = Math.min(box, Math.max(0, nQ - ore));
+        if (bQ > 0) { ore += bQ; box -= bQ; log.push(`Dùng ${bQ} hộp → +${bQ} quặng`); }
+        
+        let bW = Math.min(box, Math.ceil(Math.max(0, nW - wood) / 4));
+        if (bW > 0) { wood += bW * 4; box -= bW; log.push(`Dùng ${bW} hộp → +${bW*4} gỗ`); }
+        
+        if (box > 0) { stone += box * 20; log.push(`Dùng ${box} hộp → +${box*20} đá`); box = 0; }
 
-        // 2. Quy đổi tài nguyên (Đá -> Gỗ -> Quặng)
         while (true) {
             let changed = false;
-            let missOre = Math.max(0, needOre - ore);
-            let missWood = Math.max(0, needWood - wood);
-
-            let stoneToWood = Math.min(Math.floor(stone / 5), missWood + missOre * 4);
-            if (stoneToWood > 0) {
-                log.push(`Đổi ${stoneToWood * 5} đá → +${stoneToWood} gỗ`);
-                stone -= stoneToWood * 5; wood += stoneToWood; changed = true;
-            }
-
-            let woodToOre = Math.min(Math.floor(wood / 4), missOre);
-            if (woodToOre > 0) {
-                log.push(`Đổi ${woodToOre * 4} gỗ → +${woodToOre} quặng`);
-                wood -= woodToOre * 4; ore += woodToOre; changed = true;
-            }
+            let mQ = Math.max(0, nQ - ore);
+            let mW = Math.max(0, nW - wood);
+            let sToW = Math.min(Math.floor(stone / 5), mW + mQ * 4);
+            if (sToW > 0) { stone -= sToW * 5; wood += sToW; log.push(`Đổi ${sToW * 5} đá → +${sToW} gỗ`); changed = true; }
+            let wToO = Math.min(Math.floor(wood / 4), mQ);
+            if (wToO > 0) { wood -= wToO * 4; ore += wToO; log.push(`Đổi ${wToO * 4} gỗ → +${wToO} quặng`); changed = true; }
             if (!changed) break;
         }
 
-        let missS = Math.max(0, needStone - stone);
-        let missW = Math.max(0, needWood - wood);
-        let missQ = Math.max(0, needOre - ore);
-
-        if (missS > 0 || missW > 0 || missQ > 0) {
-            return { ok: false, missing: { stone: missS, wood: missW, ore: missQ } };
-        }
-        return { ok: true, log, remaining: { stone: stone - needStone, wood: wood - needWood, ore: ore - needOre } };
+        if (stone < nS || wood < nW || ore < nQ) return { ok: false };
+        return { ok: true, log: log, rem: { s: stone - nS, w: wood - nW, q: ore - nQ } };
     }
 
     function computeCannon() {
@@ -120,68 +100,84 @@
         const out = document.getElementById('output');
         out.style.display = 'block';
 
-        let finalLevel = 0;
-        let finalResult = null;
-
+        let finalLv = 0;
         if (targetInput !== "") {
-            finalLevel = parseInt(targetInput);
-            finalResult = simulateOptimal(S, W, Q, B, finalLevel);
+            finalLv = parseInt(targetInput);
         } else {
-            // Binary search tìm max level
-            let lo = 0, hi = 50000;
+            let lo = 0, hi = 100000;
             while (lo <= hi) {
                 let mid = Math.floor((lo + hi) / 2);
-                if (simulateOptimal(S, W, Q, B, mid).ok) {
-                    finalLevel = mid;
-                    lo = mid + 1;
-                } else {
-                    hi = mid - 1;
-                }
+                if (simulateOptimal(S, W, Q, B, mid).ok) { finalLv = mid; lo = mid + 1; }
+                else { hi = mid - 1; }
             }
-            finalResult = simulateOptimal(S, W, Q, B, finalLevel);
         }
 
-        if (finalResult.ok) {
-            out.innerHTML = ` <b>Cấp tối đa: <b>${finalLevel}</b><br>
-                             Tổng điểm: ${(finalLevel * 556000).toLocaleString()}<br><br>
-                             <b>Các bước đổi:</b><br>
-                             <div class="log-text">${finalResult.log.length ? finalResult.log.join('\n') : 'Không cần quy đổi'}</div>`;
-            saveHistory(finalLevel);
+        const res = simulateOptimal(S, W, Q, B, finalLv);
+        if (res.ok) {
+            const now = new Date();
+            const seasonStr = calculateGameSeason(now);
+            const fullTime = now.toLocaleTimeString('vi-VN') + " " + now.toLocaleDateString('vi-VN');
+            let logHtml = res.log.length > 0 ? res.log.join('<br>') : "Không cần đổi";
+            
+            out.innerHTML = `
+                <b>Cấp tối đa:</b> ${finalLv}<br>
+                <b>Tổng điểm:</b> ${(finalLv * 556000).toLocaleString()}<br><br>
+                <b>Các bước đổi:</b><br><div style="margin-top:5px">${logHtml}</div><br>
+                <b>Còn lại:</b><br>
+                <ul style="margin-top:5px; padding-left:20px">
+                    <li>Đá: ${res.rem.s.toLocaleString()}</li>
+                    <li>Gỗ: ${res.rem.w.toLocaleString()}</li>
+                    <li>Quặng: ${res.rem.q.toLocaleString()}</li>
+                </ul>
+            `;
+            saveHistory(finalLv, (finalLv * 556000), seasonStr, fullTime);
         } else {
-            out.innerHTML = `❌ <b>Không đủ tài nguyên!</b><br>Thiếu: Đá ${finalResult.missing.stone}, Gỗ ${finalResult.missing.wood}, Quặng ${finalResult.missing.ore}`;
+            out.innerHTML = `<span style="color:red; font-weight:bold">❌ Không đủ tài nguyên cho cấp ${finalLv}</span>`;
         }
         renderHistory();
     }
 
-    function saveHistory(lv) {
-        let history = JSON.parse(localStorage.getItem("historyCompute") || "[]");
-        history.push({
-            time: new Date().toLocaleString("vi-VN"),
-            level: lv,
-            point: lv * 556
-        });
-        if (history.length > 10) history.shift();
-        localStorage.setItem("historyCompute", JSON.stringify(history));
+    function saveHistory(lv, pts, sea, time) {
+        let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
+        history.push({ lv: lv, pts: pts, sea: sea, time: time });
+        if (history.length > 100) history.shift();
+        localStorage.setItem("cannon_v7_final", JSON.stringify(history));
     }
 
     function renderHistory() {
         const box = document.getElementById("historyBox");
-        let history = JSON.parse(localStorage.getItem("historyCompute") || "[]");
-        if (history.length === 0) return;
-        box.innerHTML = history.reverse().map(h => `
-            <div class="history-item">
-                🕒 ${h.time} | <b>Lv: ${h.level}</b> | ⭐ ${h.point.toLocaleString()}đ
-            </div>
-        `).join('');
+        const countDisplay = document.getElementById("historyCount");
+        let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
+        
+        countDisplay.innerText = `(${history.length}/100)`;
+
+        if (history.length === 0) {
+            box.innerHTML = "<i>Chưa có dữ liệu</i>";
+            return;
+        }
+        
+        // Render với số thứ tự #
+        box.innerHTML = history.slice().reverse().map((h, index) => {
+            // Tính số thứ tự thực (vì đang reverse nên cần tính toán một chút)
+            const realIndex = history.length - index;
+            return `
+                <div class="history-item">
+                    <div class="icon-text">
+                        <span class="history-index">#${realIndex}</span> 
+                        🕒 <b>${h.time}</b>
+                    </div>
+                    <div class="icon-text">⚔️ Lv: ${h.lv} | Điểm: ${h.pts.toLocaleString()}</div>
+                    <div class="icon-text">📅 ${h.sea}</div>
+                </div>
+            `;
+        }).join('');
     }
 
     function clearHistory() {
-        if(confirm("Xóa lịch sử?")) {
-            localStorage.removeItem("historyCompute");
-            document.getElementById("historyBox").innerHTML = "<i>Chưa có dữ liệu</i>";
+        if(confirm("Xóa toàn bộ lịch sử?")) {
+            localStorage.removeItem("cannon_v7_final");
+            renderHistory();
         }
     }
-
-    // Load history khi tab được tải
     renderHistory();
 </script>
