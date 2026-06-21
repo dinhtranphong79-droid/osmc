@@ -1,0 +1,613 @@
+<div class="tab-content-thienphu">
+  <style>
+   :root {
+     --bg-tp: #f4f6f9;
+     --card-tp: #ffffff;
+     --text-tp: #1e293b;
+     --muted-tp: #64748b;
+     --primary-tp: #3b82f6;
+     --success-tp: #10b981;
+     --accent-tp: #facc15;
+     --danger-tp: #ef4444;
+     --shadow-tp: 0 4px 18px rgba(15, 23, 42, 0.04);
+   }
+
+   .tab-content-thienphu { 
+     font-family: 'Inter', -apple-system, Arial, sans-serif; 
+     color: var(--text-tp);
+     padding: 10px 0;
+   }
+
+   .tab-content-thienphu h1 { 
+     font-size: 24px; 
+     font-weight: 700; 
+     margin-bottom: 20px; 
+     color: #0f172a;
+   }
+
+   .tab-content-thienphu h2 { 
+     font-size: 16px; 
+     font-weight: 700; 
+     margin: 0; 
+     color: #1e293b;
+   }
+
+   .tab-content-thienphu .card { 
+     background: var(--card-tp); 
+     padding: 20px; 
+     border-radius: 12px; 
+     box-shadow: var(--shadow-tp); 
+     margin-bottom: 18px; 
+     border: 1px solid rgba(0, 0, 0, 0.02);
+   }
+
+   /* --- HỆ THỐNG GRID ĐỒNG BỘ CHO TOÀN BỘ Ô NHẬP LIỆU --- */
+   .tab-content-thienphu .uniform-grid { 
+     display: grid; 
+     grid-template-columns: repeat(2, 1fr); 
+     gap: 12px; 
+     margin-top: 15px;
+   }
+   
+   /* Định dạng chung cho tất cả các item nhập liệu để tạo tính tương đồng */
+   .tab-content-thienphu .input-item { 
+     display: flex; 
+     align-items: center; 
+     justify-content: space-between; /* Giữ chữ bên trái, ô nhập bên phải trong phạm vi thẻ */
+     background: #f8fafc; 
+     padding: 12px 16px; 
+     border-radius: 8px; 
+     border: 1px solid #e2e8f0; 
+   }
+   
+   .tab-content-thienphu .input-item label,
+   .tab-content-thienphu .input-item span { 
+     font-size: 13px; 
+     font-weight: 600; 
+     color: #475569; 
+   }
+   
+   .tab-content-thienphu .inner-wrap { 
+     display: flex; 
+     align-items: center; 
+     gap: 6px; 
+   }
+
+   .tab-content-thienphu .buff-review-container { 
+     display: flex; 
+     flex-direction: column;
+     gap: 6px;
+     margin-top: 14px; 
+     padding-top: 10px; 
+     border-top: 1px dashed #e2e8f0; 
+     font-size: 13px; 
+     font-weight: 700; 
+   }
+
+   /* Cấu trúc hàng Tài Nguyên chính */
+   .tab-content-thienphu .row { display: flex; gap: 20px; flex-wrap: wrap; }
+   .tab-content-thienphu .col { flex: 1; min-width: 250px; }
+   
+   /* Khu hiển thị text thông tin điểm mùa giải */
+   .tab-content-thienphu .info-item { 
+     display: flex; 
+     justify-content: space-between; 
+     align-items: center; 
+     margin-bottom: 12px; 
+     font-size: 14px; 
+   }
+
+   .tab-content-thienphu select, .tab-content-thienphu input[type="number"] { 
+     padding: 6px 10px; 
+     border-radius: 6px; 
+     border: 1px solid #cbd5e1; 
+     background: #fff; 
+     color: var(--text-tp);
+     font-size: 14px;
+     outline: none;
+     transition: border-color 0.2s;
+   }
+   
+   .tab-content-thienphu select:focus, .tab-content-thienphu input[type="number"]:focus {
+     border-color: var(--primary-tp);
+   }
+
+   .tab-content-thienphu .input-small { width: 75px; text-align: center; }
+
+   .tab-content-thienphu .troop-input-wrapper {
+     position: relative;
+     display: inline-block;
+   }
+
+   /* Hệ thống Bảng GM */
+   .tab-content-thienphu .gm-grid {
+     display: grid;
+     grid-template-columns: repeat(10, 1fr);
+     gap: 8px;
+     margin-top: 10px;
+   }
+
+   .tab-content-thienphu .gm-block {
+     background: #f8fafc;
+     border: 1px solid #e2e8f0;
+     border-radius: 8px;
+     overflow: hidden;
+     text-align: center;
+   }
+
+   .tab-content-thienphu .gm-header {
+     background: #e2e8f0;
+     font-size: 12px;
+     font-weight: 700;
+     padding: 4px 0;
+     color: #475569;
+   }
+
+   .tab-content-thienphu .gm-body { padding: 8px 4px; }
+   .tab-content-thienphu .gm-body input { width: 85%; box-sizing: border-box; }
+
+   .tab-content-thienphu .gm-footer {
+     padding: 6px 0;
+     font-size: 13px;
+     font-weight: 700;
+     background: #fff;
+     border-top: 1px dashed #e2e8f0;
+     color: var(--muted-tp);
+   }
+
+   .tab-content-thienphu .gm-block.has-value .gm-footer {
+     background: #ecfdf5;
+     color: var(--success-tp);
+   }
+
+   /* Hộp tổng điểm */
+   .tab-content-thienphu .total-box { 
+     font-size: 20px; 
+     font-weight: 700; 
+     padding: 18px; 
+     background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); 
+     color: white;
+     border-radius: 12px; 
+     text-align: center; 
+     box-shadow: 0 10px 25px -5px rgba(220, 38, 38, 0.4);
+     margin-top: 15px;
+   }
+
+   @media (max-width: 992px) {
+     .tab-content-thienphu .uniform-grid { grid-template-columns: 1fr; }
+     .tab-content-thienphu .gm-grid { grid-template-columns: repeat(5, 1fr); }
+   }
+  </style>
+
+  <div class="card">
+    <h2>Tổng kết</h2>
+    <div style="font-size: 13px; color: var(--muted-tp); margin-top: 4px;">Đối đầu (Để trống nếu tính lcch)</div>
+    
+    <div class="uniform-grid">
+      <div class="input-item">
+        <label>Chuyên gia đối đầu 1:</label>
+        <div class="inner-wrap">
+          <input type="number" id="buffCg1" class="input-small" value="0" min="0"> <b>%</b>
+        </div>
+      </div>
+      <div class="input-item">
+        <label>Chuyên gia đối đầu 2:</label>
+        <div class="inner-wrap">
+          <input type="number" id="buffDdLinh" class="input-small" value="0" min="0"> <b>%</b>
+        </div>
+      </div>
+      <div class="input-item">
+        <label>Đối đầu - Tiến hóa lính:</label>
+        <div class="inner-wrap">
+          <input type="number" id="buffCg2" class="input-small" value="0" min="0"> <b>%</b>
+        </div>
+      </div>
+      <div class="input-item">
+        <label>Đối đầu - Thiên phú lính:</label>
+        <div class="inner-wrap">
+          <input type="number" id="buffDdThienPhu" class="input-small" value="0" min="0"> <b>%</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="buff-review-container">
+      <div style="color: var(--success-tp);" id="reviewThienPhu">Tổng % tăng thêm - Thiên phú: 0%</div>
+      <div style="color: var(--primary-tp);" id="reviewLinh">Tổng % tăng thêm - Lính: 0%</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🏆 Mùa giải & Tài nguyên</h2>
+    <div class="row" style="margin-top: 15px;">
+      
+      <div class="col" style="border-right: 1px dashed #e2e8f0; padding-right: 15px;">
+        <div class="info-item" style="margin-bottom: 20px;">
+          <label style="font-weight:600;">Mùa giải:</label>
+          <select id="seasonSelect" style="width:140px;"></select>
+        </div>
+        <div class="info-item">
+          <span class="muted-tp">Điểm sách thiên phú:</span>
+          <b id="spBook" style="color:var(--success-tp)">-</b>
+        </div>
+        <div class="info-item">
+          <span class="muted-tp">Điểm vương miện:</span>
+          <b id="spCrown" style="color:var(--accent-tp)">-</b>
+        </div>
+      </div>
+      
+      <div class="col" style="flex: 2; display: flex; flex-direction: column; gap: 12px; padding-left: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+          
+          <div class="input-item">
+            <span>Sách thiên phú:</span>
+            <input id="inBooks" type="number" class="input-small" value="0" min="0">
+          </div>
+          <div class="input-item">
+            <span>Vương miện:</span>
+            <input id="inCrowns" type="number" class="input-small" value="0" min="0">
+          </div>
+          
+          <div class="input-item">
+            <span>Sách lính T1:</span>
+            <div class="troop-input-wrapper"><input id="t1" class="input-small troop-input" type="number" value="0" min="0"></div>
+          </div>
+          <div class="input-item">
+            <span>Sách lính T2:</span>
+            <div class="troop-input-wrapper"><input id="t2" class="input-small troop-input" type="number" value="0" min="0"></div>
+          </div>
+          <div class="input-item">
+            <span>Sách lính T3:</span>
+            <div class="troop-input-wrapper"><input id="t3" class="input-small troop-input" type="number" value="0" min="0"></div>
+          </div>
+          <div class="input-item">
+            <span>Sách lính T4:</span>
+            <div class="troop-input-wrapper"><input id="t4" class="input-small troop-input" type="number" value="0" min="0"></div>
+          </div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>GM1 (Max 48)</h2>
+    <div class="gm-grid" id="gm1Container"></div>
+  </div>
+
+  <div class="card">
+    <h2>GM2 (Max 6)</h2>
+    <div class="gm-grid" id="gm2Container"></div>
+  </div>
+
+  <div class="total-box" id="totalDisplay">Tổng điểm: 0</div>
+</div>
+
+<div id="tp-calc-shadow-host"></div>
+
+<script>
+(function(){
+  const seasons = [
+    {name:"Mùa giải 20", bookPoint:2.8, crownPoint:28},
+    {name:"Mùa giải 21", bookPoint:1.12, crownPoint:11.2},
+    {name:"Mùa giải 22", bookPoint:1.12, crownPoint:11.2},
+    {name:"Mùa giải 23", bookPoint:1.12, crownPoint:11.2},
+    {name:"Mùa giải 24", bookPoint:1.12, crownPoint:11.2},
+    {name:"Mùa giải 25", bookPoint:0.56, crownPoint:5.6},
+    {name:"Mùa giải 26", bookPoint:0.56, crownPoint:5.6},
+    {name:"Mùa giải 27", bookPoint:0.224, crownPoint:2.24}
+  ];
+
+  const gm1Costs = [5,20,100,500,2500,12500,62500,312500,1562500,7812500];
+  const gm2Book  = [10,40,200,1000,5000,25000,125000,625000,3125000,15625000];
+  const gm2Crown = [5,20,100,500,2500,12500,62500,312500,1562500,78125000];
+
+  const containerMain = document.querySelector('.tab-content-thienphu');
+  const gm1Container = document.getElementById('gm1Container');
+  const gm2Container = document.getElementById('gm2Container');
+
+  if(gm1Container && gm1Container.children.length === 0){
+    for(let i=0; i<10; i++) {
+      gm1Container.innerHTML += `
+        <div class="gm-block" id="gm1Block-${i}">
+          <div class="gm-header">T${i+1}</div>
+          <div class="gm-body"><input type="number" class="input-small gm1Done" data-tier="${i}" min="0" max="48" value="0"></div>
+          <div class="gm-footer gm1Result" id="gm1Res-${i}">0</div>
+        </div>`;
+    }
+  }
+  
+  if(gm2Container && gm2Container.children.length === 0){
+    for(let i=0; i<10; i++) {
+      gm2Container.innerHTML += `
+        <div class="gm-block" id="gm2Block-${i}">
+          <div class="gm-header">T${i+1}</div>
+          <div class="gm-body"><input type="number" class="input-small gm2Done" data-tier="${i}" min="0" max="6" value="0"></div>
+          <div class="gm-footer gm2Result" id="gm2Res-${i}">0</div>
+        </div>`;
+    }
+  }
+
+  const seasonSel = document.getElementById('seasonSelect');
+  const inBooks = document.getElementById('inBooks');
+  const inCrowns = document.getElementById('inCrowns');
+
+  if(seasonSel){
+    seasonSel.innerHTML = '';
+    seasons.forEach((s,i)=>{ const op=document.createElement('option'); op.value=i; op.textContent=s.name; seasonSel.appendChild(op); });
+    seasonSel.selectedIndex = 0;
+    seasonSel.addEventListener('change', ()=>{ updateSeasonDisplay(); calcAll(); });
+  }
+  function updateSeasonDisplay(){ 
+    const s = seasons[seasonSel.value||0]; 
+    if(document.getElementById('spBook')) document.getElementById('spBook').textContent = s.bookPoint; 
+    if(document.getElementById('spCrown')) document.getElementById('spCrown').textContent = s.crownPoint; 
+  }
+  updateSeasonDisplay();
+
+  containerMain.addEventListener('input', calcAll);
+
+  function calcAll(){
+    const season = seasons[parseInt(seasonSel.value||0) || 0];
+    let books = Math.max(0, Math.floor(Number(inBooks.value) || 0));
+    let crowns = Math.max(0, Math.floor(Number(inCrowns.value) || 0));
+
+    const cg1 = parseInt(document.getElementById('buffCg1').value) || 0;
+    const cg2 = parseInt(document.getElementById('buffCg2').value) || 0;
+    const ddLinh = parseInt(document.getElementById('buffDdLinh').value) || 0;
+    const ddThienPhu = parseInt(document.getElementById('buffDdThienPhu').value) || 0;
+
+    const totalBuffThienPhu = Math.max(0, cg1 + cg2 + ddThienPhu);
+    const totalBuffLinh = Math.max(0, cg1 + cg2 + ddLinh);
+
+    if(document.getElementById('reviewThienPhu')) document.getElementById('reviewThienPhu').textContent = `Tổng % tăng thêm - Thiên phú: ${totalBuffThienPhu}%`;
+    if(document.getElementById('reviewLinh')) document.getElementById('reviewLinh').textContent = `Tổng % tăng thêm - Lính: ${totalBuffLinh}%`;
+
+    const multThienPhu = 1 + (totalBuffThienPhu / 100);
+    const multLinh = 1 + (totalBuffLinh / 100);
+
+    let usedGM1Books = 0; let usedGM2Books = 0; let usedGM2Crowns = 0;
+
+    const gm1Done = Array.from(document.querySelectorAll('.tab-content-thienphu .gm1Done')).map(i=>{ let v = Math.floor(Number(i.value)||0); if(v<0)v=0; if(v>48)v=48; return v; });
+    let totalGM1Up = 0;
+    for(let t=0;t<10;t++){
+      const remain = 48 - (gm1Done[t]||0);
+      const block = document.getElementById(`gm1Block-${t}`);
+      const resEl = document.getElementById(`gm1Res-${t}`);
+      if(remain<=0){ if(resEl) resEl.textContent = 0; if(block) block.classList.remove('has-value'); continue; }
+      const cost = gm1Costs[t]||1;
+      const maxByBooks = Math.floor(books/cost);
+      const up = Math.max(0, Math.min(remain, maxByBooks));
+      books -= up*cost; usedGM1Books += up*cost; totalGM1Up += up;
+      if(resEl) resEl.textContent = up;
+      if(block) { if(up > 0) block.classList.add('has-value'); else block.classList.remove('has-value'); }
+    }
+
+    const gm2Done = Array.from(document.querySelectorAll('.tab-content-thienphu .gm2Done')).map(i=>{ let v = Math.floor(Number(i.value)||0); if(v<0)v=0; if(v>6)v=6; return v; });
+    let gm1Pool = totalGM1Up;
+    for(let t=0;t<10;t++){
+      const remain = 6 - (gm2Done[t]||0);
+      const block = document.getElementById(`gm2Block-${t}`);
+      const resEl = document.getElementById(`gm2Res-${t}`);
+      if(remain<=0){ if(resEl) resEl.textContent=0; if(block) block.classList.remove('has-value'); continue; }
+      const maxByGM1 = Math.floor(gm1Pool/8);
+      const maxByBooks = Math.floor(books / (gm2Book[t]||1));
+      const maxByCrowns = Math.floor(crowns / (gm2Crown[t]||1));
+      const up = Math.max(0, Math.min(remain, maxByGM1, maxByBooks, maxByCrowns));
+      if(up>0){ books -= up*(gm2Book[t]||1); crowns -= up*(gm2Crown[t]||1); gm1Pool -= up*8; usedGM2Books += up*(gm2Book[t]||1); usedGM2Crowns += up*(gm2Crown[t]||1); }
+      if(resEl) resEl.textContent = up;
+      if(block) { if(up > 0) block.classList.add('has-value'); else block.classList.remove('has-value'); }
+    }
+
+    const troopInputs = Array.from(document.querySelectorAll('.tab-content-thienphu .troop-input'));
+    const baseTroopPoints = troopInputs.reduce((s,el,idx)=> s + (Math.floor(Number(el.value)||0) * [800,4000,20000,100000][idx]), 0);
+    const finalTroopPoints = Math.floor(baseTroopPoints * multLinh);
+
+    const pointGM1 = usedGM1Books * season.bookPoint;
+    const pointGM2 = usedGM2Books * season.bookPoint + usedGM2Crowns * season.crownPoint;
+    const finalThienPhuPoints = Math.floor((pointGM1 + pointGM2) * multThienPhu);
+
+    const totalPoints = finalThienPhuPoints + finalTroopPoints;
+    const totalDisplay = document.getElementById('totalDisplay'); 
+    if(totalDisplay) totalDisplay.textContent = `Tổng điểm: ${Number(totalPoints).toLocaleString('vi-VN')}`;
+  }
+
+  calcAll();
+
+  // --- HỆ THỐNG MÁY TÍNH MINI SỬ DỤNG SHADOW DOM CHỐNG LOẠN CSS ---
+  let shadowRoot = null;
+  let calcWrapper = null;
+  let calculatorState = { expr: '' , targetInput: null };
+
+  function initShadowCalculator(){
+    if(shadowRoot) return;
+    const host = document.getElementById('tp-calc-shadow-host');
+    if(!host) return;
+    
+    shadowRoot = host.attachShadow({mode: 'open'});
+    calcWrapper = document.createElement('div');
+    calcWrapper.className = 'calc-popup';
+    calcWrapper.style.display = 'none';
+    calcWrapper.style.position = 'absolute';
+    calcWrapper.style.zIndex = '99999';
+    
+    const style = document.createElement('style');
+    style.textContent = `
+      .calc-popup {
+        background: #ffffff !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25) !important;
+        width: 190px !important;
+        box-sizing: border-box !important;
+        border: 1px solid #cbd5e1 !important;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+      }
+      .calc-display {
+        width: 100% !important;
+        height: 38px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 6px !important;
+        padding: 0 8px !important;
+        text-align: right !important;
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        margin-bottom: 8px !important;
+        box-sizing: border-box !important;
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        line-height: 36px !important;
+      }
+      .calc-grid { 
+        display: grid !important; 
+        grid-template-columns: repeat(3, 1fr) !important; 
+        gap: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .calc-grid button {
+        display: block !important;
+        width: 100% !important;
+        height: 34px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+        float: none !important;
+      }
+      .calc-grid button:hover { background: #f1f5f9 !important; }
+      #__calc_plus { background: #eff6ff !important; color: #3b82f6 !important; }
+      #__calc_eq { background: #3b82f6 !important; color: #ffffff !important; }
+      #__calc_eq:hover { background: #2563eb !important; }
+      
+      .calc-btn-back {
+        display: block !important;
+        width: 100% !important;
+        height: 30px !important;
+        border: 1px solid #e2e8f0 !important;
+        padding: 0 !important;
+        margin: 8px 0 0 0 !important;
+        border-radius: 6px !important;
+        background: #ffffff !important;
+        color: #475569 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        box-sizing: border-box !important;
+        float: none !important;
+      }
+      .calc-btn-back:hover { background: #f1f5f9 !important; }
+      .calc-close {
+        position: absolute !important;
+        top: -8px !important;
+        right: -8px !important;
+        width: 22px !important;
+        height: 22px !important;
+        border-radius: 50% !important;
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        padding: 0 !important;
+        line-height: 22px !important;
+        text-align: center !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+        margin: 0 !important;
+      }
+    `;
+
+    calcWrapper.innerHTML =
+      '<button class="calc-close" type="button">×</button>' +
+      '<div class="calc-display" id="__calc_display">0</div>' +
+      '<div class="calc-grid">' +
+        '<button type="button" data-d>7</button><button type="button" data-d>8</button><button type="button" data-d>9</button>' +
+        '<button type="button" data-d>4</button><button type="button" data-d>5</button><button type="button" data-d>6</button>' +
+        '<button type="button" data-d>1</button><button type="button" data-d>2</button><button type="button" data-d>3</button>' +
+        '<button type="button" data-d>0</button><button type="button" id="__calc_plus">+</button><button type="button" id="__calc_eq">=</button>' +
+      '</div>' +
+      '<div><button type="button" class="calc-btn-back" id="__calc_back">Xóa</button></div>';
+
+    shadowRoot.appendChild(style);
+    shadowRoot.appendChild(calcWrapper);
+
+    const disp = calcWrapper.querySelector('#__calc_display');
+    const back = calcWrapper.querySelector('#__calc_back');
+    const plus = calcWrapper.querySelector('#__calc_plus');
+    const eq = calcWrapper.querySelector('#__calc_eq');
+    const digits = Array.from(calcWrapper.querySelectorAll('[data-d]'));
+    const closeBtn = calcWrapper.querySelector('.calc-close');
+
+    function render(){ disp.textContent = calculatorState.expr || '0'; }
+
+    digits.forEach(btn=> btn.addEventListener('click', (e)=>{ e.stopPropagation(); calculatorState.expr += btn.textContent; render(); }));
+    plus.addEventListener('click', (e)=>{ e.stopPropagation(); if(calculatorState.expr === '') return; if(calculatorState.expr.slice(-1) === '+') return; calculatorState.expr += '+'; render(); });
+    back.addEventListener('click', (e)=>{ e.stopPropagation(); calculatorState.expr = calculatorState.expr.slice(0,-1); render(); });
+    eq.addEventListener('click', (e)=>{ e.stopPropagation(); applyValue(); });
+    closeBtn.addEventListener('click', (e)=>{ e.stopPropagation(); hideCalculator(); });
+  }
+
+  function applyValue(){
+    let sum = 0;
+    if(calculatorState.expr !== ''){
+      const parts = calculatorState.expr.split('+').filter(p=>p!=='');
+      for(const p of parts){ const n = parseInt(p,10); if(!isNaN(n)) sum += n; }
+    }
+    if(calculatorState.targetInput) {
+      calculatorState.targetInput.value = sum;
+      calculatorState.targetInput.dispatchEvent(new Event('input'));
+    }
+    hideCalculator();
+  }
+
+  function showCalculatorFor(input){
+    if(!input) return;
+    initShadowCalculator();
+    calculatorState.expr = (input.value && !isNaN(Number(input.value))) ? String(Number(input.value)) : '';
+    calculatorState.targetInput = input;
+    
+    const rect = input.getBoundingClientRect();
+    let left = rect.left + rect.width + 8 + window.scrollX;
+    let top = rect.top + window.scrollY;
+
+    const popupWidth = 190; 
+    if (left + popupWidth > window.innerWidth + window.scrollX) {
+      left = Math.max(10, rect.left + window.scrollX - 100); 
+      top = rect.bottom + 6 + window.scrollY;
+    }
+
+    calcWrapper.style.left = left + 'px';
+    calcWrapper.style.top = top + 'px';
+    calcWrapper.style.display = 'block';
+    calcWrapper.querySelector('#__calc_display').textContent = calculatorState.expr || '0';
+  }
+
+  function hideCalculator(){
+    if(!calcWrapper) return;
+    calcWrapper.style.display = 'none';
+    calculatorState.expr = '';
+    calculatorState.targetInput = null;
+  }
+
+  containerMain.addEventListener('focusin', (e) => {
+    if (e.target && e.target.classList.contains('troop-input')) {
+      showCalculatorFor(e.target);
+    }
+  });
+
+  document.addEventListener('mousedown', (ev)=>{
+    if(!calcWrapper || calcWrapper.style.display !== 'block') return;
+    const host = document.getElementById('tp-calc-shadow-host');
+    if(host && host.contains(ev.target)) return;
+    if(ev.target.classList && ev.target.classList.contains('troop-input')) return;
+    applyValue();
+  });
+})();
+</script>
