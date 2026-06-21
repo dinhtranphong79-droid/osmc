@@ -30,55 +30,60 @@
 
     <script>
        function loadTab(tabName, element) {
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    element.classList.add('active');
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
 
-    const contentDiv = document.getElementById('tab-content');
-    
-    fetch(`${tabName}.html`)
-        .then(response => {
-            if (!response.ok) throw new Error(`Không tìm thấy file ${tabName}.html`);
-            return response.text();
-        })
-        .then(data => {
-            contentDiv.innerHTML = data;
+            const contentDiv = document.getElementById('tab-content');
+            
+            fetch(`${tabName}.html`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Không tìm thấy file ${tabName}.html`);
+                    return response.text();
+                })
+                .then(data => {
+                    // 1. Dọn dẹp các script cũ gắn thẻ 'data-tab-script' trước khi nạp tab mới
+                    const oldTabScripts = document.head.querySelectorAll('[data-tab-script]');
+                    oldTabScripts.forEach(script => script.remove());
 
-            const scripts = contentDiv.querySelectorAll("script");
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement("script");
+                    // 2. Nạp nội dung HTML vào giao diện
+                    contentDiv.innerHTML = data;
 
-                Array.from(oldScript.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
+                    // 3. Xử lý kích hoạt chạy Script của tab mới một cách an toàn
+                    const scripts = contentDiv.querySelectorAll("script");
+                    scripts.forEach(oldScript => {
+                        const newScript = document.createElement("script");
+
+                        // Sao chép các thuộc tính vốn có
+                        Array.from(oldScript.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+
+                        // Đánh dấu đây là script của tab để dễ dọn dẹp ở lần chuyển tab sau
+                        newScript.setAttribute('data-tab-script', tabName);
+
+                        if (!oldScript.src) {
+                            newScript.text = oldScript.innerHTML;
+                        }
+
+                        // Chèn thẳng vào head để thực thi toàn diện
+                        document.head.appendChild(newScript);
+                        
+                        // Loại bỏ script gốc bên trong div content để tránh hiển thị thừa trên DOM tree
+                        oldScript.remove();
+                    });
+                })
+                .catch(error => {
+                    contentDiv.innerHTML = `<p style='color:red;'>Lỗi: ${error.message}</p>`;
+                    console.error("Lỗi tải Tab:", error);
                 });
+        }
 
-                if (!oldScript.src) {
-                    newScript.text = oldScript.innerHTML;
-                }
-
-                // CHỈNH SỬA Ở ĐÂY: Chèn vào head thay vì body và KHÔNG xóa ngay lập tức
-                // Việc chèn vào head giúp các hàm được đăng ký vào window dễ hơn
-                document.head.appendChild(newScript);
-                
-                // Nếu là script chứa code (không phải link src), xóa sau 100ms để đảm bảo đã thực thi
-                if (!oldScript.src) {
-                    setTimeout(() => {
-                        if (document.head.contains(newScript)) document.head.removeChild(newScript);
-                    }, 100);
-                }
-            });
-        })
-        .catch(error => {
-            contentDiv.innerHTML = `<p style='color:red;'>Lỗi: ${error.message}</p>`;
-            console.error("Lỗi tải Tab:", error);
-        });
-}
-
-// Tự động kích hoạt tab đầu tiên khi trang tải xong
-window.onload = () => {
-    const firstBtn = document.querySelector('.tab-btn');
-    if (firstBtn) firstBtn.click();
-};
+        // Tự động kích hoạt tab đầu tiên khi trang tải xong
+        window.onload = () => {
+            const firstBtn = document.querySelector('.tab-btn');
+            if (firstBtn) firstBtn.click();
+        };
     </script>
 </body>
 </html>
