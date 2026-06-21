@@ -1,5 +1,4 @@
 <style>
-/* Giữ nguyên toàn bộ CSS hệ thống màu sắc của bạn */
 :root{
   --bg:#ffffff; --card:#f8f8f8; --muted:#555555; --accent:#60a5fa;
   --fire:#e11d48; --water:#0284c7; --wind:#10b981; --light:#facc15;
@@ -26,6 +25,12 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
 .summary-tuong { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .row-tuong { display:flex; justify-content:space-between; align-items:center; }
 .big-tuong { font-size:18px; font-weight:700; }
+
+/* Các ô nhập % phụ */
+.buff-group-tuong { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; padding-bottom: 12px; border-bottom: 1px dashed #ccc; }
+.buff-row-tuong { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.buff-row-tuong label { font-size: 13px; color: #333; flex: 1; }
+.buff-input-wrapper { display: flex; align-items: center; gap: 4px; width: 100px; }
 
 /* Modal */
 .modal-tuong { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:9999; }
@@ -63,7 +68,37 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
     </section>
 
     <aside class="panel-tuong">
-      <div><strong>Tổng kết</strong></div>
+      <div style="font-size:18px; font-weight:700; margin-bottom:12px;">Tổng kết</div>
+      
+      <div class="buff-group-tuong" style="margin-top: 0;">
+        <div style="font-weight:600; font-size:14px; color:var(--muted); margin-bottom:4px;">Đối đầu (Để trống nếu tính lcch)</div>
+        
+        <div class="buff-row-tuong">
+            <label>Chuyên gia đối đầu 1:</label>
+            <div class="buff-input-wrapper">
+                <input type="number" id="buffCg1" value="0" min="0">
+                <span style="font-weight:bold; color:var(--muted);">%</span>
+            </div>
+        </div>
+        <div class="buff-row-tuong">
+            <label>Chuyên gia đối đầu 2:</label>
+            <div class="buff-input-wrapper">
+                <input type="number" id="buffCg2" value="0" min="0">
+                <span style="font-weight:bold; color:var(--muted);">%</span>
+            </div>
+        </div>
+        <div class="buff-row-tuong">
+            <label>Đối đầu - Tướng:</label>
+            <div class="buff-input-wrapper">
+                <input type="number" id="buffDdT" value="0" min="0">
+                <span style="font-weight:bold; color:var(--muted);">%</span>
+            </div>
+        </div>
+        <div style="font-size:12px; color:#16a34a; font-weight:600; text-align:right; margin-top:2px;" id="totalBuffReview">
+            Tổng % tăng thêm: 0%
+        </div>
+      </div>
+
       <div class="summary-tuong" id="summary"></div>
     </aside>
   </main>
@@ -94,14 +129,28 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
     };
     const expList = { "B+": ["Daniel"], "B": ["Anton","Peter","Etley"], "SR": ["Alucard","Samar","Harold","Kris","Merlin","Ophelia","Arwyn"]};
     
-    const LS_KEY="hero_upgrader_state_v2";
+    const LS_KEY="hero_upgrader_state_v4";
     const $ = id => document.getElementById(id);
-    let state = { heroes:[], activeTab: SYSTEMS[0] };
+    
+    let state = { 
+        heroes:[], 
+        activeTab: SYSTEMS[0],
+        buffCg1: 0,
+        buffCg2: 0,
+        buffDdT: 0
+    };
 
     function formatNumber(n){ return Number(n).toLocaleString("vi-VN"); }
     function maxBarForStar(st){ return (COST_ARRAY[st]||[]).length; }
     function costFor(st,bar){ return (COST_ARRAY[st]||[])[bar]||null; }
     
+    function getTotalBuffPercent() {
+        const cg1 = $("buffCg1") ? parseInt($("buffCg1").value) || 0 : 0;
+        const cg2 = $("buffCg2") ? parseInt($("buffCg2").value) || 0 : 0;
+        const ddt = $("buffDdT") ? parseInt($("buffDdT").value) || 0 : 0;
+        return Math.max(0, cg1 + cg2 + ddt);
+    }
+
     function defaultHeroData(name, system){
         let sys = system;
         for(const cat in expList) if(expList[cat].includes(name)) sys="Exp";
@@ -147,14 +196,21 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
       
       box.className="modal-content-tuong sys-"+(res.isExp ? "Exp" : hero.system);
       
+      const totalBuff = getTotalBuffPercent();
+      const multiplier = 1 + (totalBuff / 100);
+      
       if(res.isExp){
         header.innerText = `Tướng EXP – ${hero.name}`;
-        body.innerText = `Hạng: ${res.exp_rank}\nSố thẻ: ${res.cards_consumed}\nĐiểm EXP: ${formatNumber(res.exp_points)}`;
+        const finalExp = Math.floor(res.exp_points * multiplier);
+        body.innerText = `Hạng: ${res.exp_rank}\nSố thẻ: ${res.cards_consumed}\nĐiểm EXP gốc: ${formatNumber(res.exp_points)}\nĐiểm sau Buff (+${totalBuff}%): ${formatNumber(finalExp)}`;
       } else {
         header.innerText = `${hero.name} – Kết quả`;
         const used_pts = res.cards_consumed * CARD_POINT;
         const left_pts = (res.final_star >= 5 ? res.cards_left : 0) * CARD_POINT;
-        body.innerText = `Nâng đến: ${res.final_star}★ bậc ${res.final_bar}\n\nThẻ dùng: ${res.cards_consumed} (Points: ${formatNumber(used_pts)})\nThẻ dư: ${res.final_star >= 5 ? res.cards_left : 0}\n\nTổng điểm: ${formatNumber(used_pts + left_pts)}\nThiếu để 5★: ${res.missing_to_5} thẻ`;
+        const total_goc = used_pts + left_pts;
+        const total_buff = Math.floor(total_goc * multiplier);
+
+        body.innerText = `Nâng đến: ${res.final_star}★ bậc ${res.final_bar}\n\nThẻ dùng: ${res.cards_consumed} (Gốc: ${formatNumber(used_pts)})\nThẻ dư: ${res.final_star >= 5 ? res.cards_left : 0}\n\nTổng điểm gốc: ${formatNumber(total_goc)}\nTổng sau Buff (+${totalBuff}%): ${formatNumber(total_buff)}\n\nThiếu để 5★: ${res.missing_to_5} thẻ`;
       }
       modal.style.display="flex";
     }
@@ -195,7 +251,6 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
             bSel.onchange = (e) => { h.current_bar = parseInt(e.target.value); saveState(); renderSummary(); };
         }
 
-        // Tối ưu hóa: Dùng sự kiện 'input' để cập nhật dữ liệu liên tục thay vì đợi 'change'
         box.querySelector(".in-cards").oninput = (e) => { 
             h.cards_owned = parseInt(e.target.value)||0; 
             saveState(); 
@@ -211,19 +266,27 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
       box.innerHTML="";
       const totals={}; [...SYSTEMS, ...Object.keys(expList)].forEach(s=>totals[s]=0);
       let grandTotal = 0;
+      
+      const totalBuff = getTotalBuffPercent();
+      const multiplier = 1 + (totalBuff / 100);
+
+      if($("totalBuffReview")) $("totalBuffReview").innerText = `Tổng % tăng thêm: ${totalBuff}%`;
 
       state.heroes.forEach(h=>{
         const res = calculateUpgrade(h);
-        const pts = res.isExp ? res.exp_points : (res.cards_consumed + (res.final_star >= 5 ? res.cards_left : 0)) * CARD_POINT;
+        const pts_goc = res.isExp ? res.exp_points : (res.cards_consumed + (res.final_star >= 5 ? res.cards_left : 0)) * CARD_POINT;
+        
+        const pts_after_buff = Math.floor(pts_goc * multiplier);
+        
         const key = h.system === "Exp" ? res.exp_rank : h.system;
-        if(totals.hasOwnProperty(key)) totals[key] += pts;
-        grandTotal += pts;
+        if(totals.hasOwnProperty(key)) totals[key] += pts_after_buff;
+        grandTotal += pts_after_buff;
       });
 
       for(const s in totals){
         box.innerHTML += `<div class="row-tuong"><span>${s}</span><span class="big-tuong">${formatNumber(totals[s])}</span></div>`;
       }
-      box.innerHTML += `<div class="row-tuong" style="border-top:1px solid #ccc; font-weight:700; margin-top:5px; padding-top:5px;"><span>Tổng</span><span class="big-tuong">${formatNumber(grandTotal)}</span></div>`;
+      box.innerHTML += `<div class="row-tuong" style="border-top:1px solid #ccc; font-weight:700; margin-top:5px; padding-top:5px;"><span>Tổng điểm</span><span class="big-tuong">${formatNumber(grandTotal)}</span></div>`;
     }
 
     function renderTabs(){
@@ -245,22 +308,43 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
       });
     }
 
-    function saveState(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); }
+    function saveState() { 
+        state.buffCg1 = $("buffCg1") ? (parseInt($("buffCg1").value) || 0) : 0;
+        state.buffCg2 = $("buffCg2") ? (parseInt($("buffCg2").value) || 0) : 0;
+        state.buffDdT = $("buffDdT") ? (parseInt($("buffDdT").value) || 0) : 0;
+        localStorage.setItem(LS_KEY,JSON.stringify(state)); 
+    }
+    
     function loadState(){
       const data=localStorage.getItem(LS_KEY);
       if(data) state=JSON.parse(data);
+      
+      if($("buffCg1")) $("buffCg1").value = state.buffCg1 || 0;
+      if($("buffCg2")) $("buffCg2").value = state.buffCg2 || 0;
+      if($("buffDdT")) $("buffDdT").value = state.buffDdT || 0;
+
       [...SYSTEMS, ...Object.keys(expList)].forEach(s=>{
         const names = heroesData[s] || expList[s];
         names.forEach(n => { if(!state.heroes.find(h=>h.name===n)) state.heroes.push(defaultHeroData(n, s)); });
       });
     }
 
-    // Đăng ký các sự kiện bằng Element Listener an toàn 
     if($("filterHero")) $("filterHero").oninput = renderHeroList;
     if($("btnCalcAll")) $("btnCalcAll").onclick = renderSummary;
     if($("btnCloseModalHero")) $("btnCloseModalHero").onclick = closeModalHero;
     
-    // Khởi chạy hệ thống
+    const setupBuffInput = id => {
+        if($(id)) {
+            $(id).oninput = () => {
+                saveState();
+                renderSummary();
+            };
+        }
+    }
+    setupBuffInput("buffCg1");
+    setupBuffInput("buffCg2");
+    setupBuffInput("buffDdT");
+    
     loadState(); 
     renderTabs(); 
     renderHeroList(); 
