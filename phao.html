@@ -19,7 +19,6 @@
     .history-item:last-child { border-bottom: none; }
     
     .icon-text { display: flex; align-items: center; gap: 5px; margin: 2px 0; }
-    /* Style cho số thứ tự # */
     .history-index { color: #999; font-weight: bold; font-size: 14px; margin-right: 8px; }
 </style>
 
@@ -31,8 +30,8 @@
     <div class="input-group"><label>Cấp mục tiêu</label><input type="number" id="targetLevel" class="cannon-input" placeholder="Để trống nếu muốn tính cấp tối đa"></div>
 
     <div class="btn-group">
-        <button class="btn-calc" onclick="computeCannon()">Tính</button>
-        <button class="btn-clear" onclick="clearHistory()">Xóa lịch sử</button>
+        <button class="btn-calc" id="btnComputeCannon">Tính</button>
+        <button class="btn-clear" id="btnClearHistory">Xóa lịch sử</button>
     </div>
 
     <div id="output" class="result-box"></div>
@@ -47,137 +46,151 @@
 </div>
 
 <script>
-    const START_DATE = new Date('2026-04-13T00:00:00');
-    const START_SEASON = 25;
+    // Đóng gói logic vào một khối IIFE để tránh xung đột biến toàn cục với các Tab khác
+    (function() {
+        const START_DATE = new Date('2026-04-13T00:00:00');
+        const START_SEASON = 25;
 
-    function getVal(id) {
-        let v = parseInt(document.getElementById(id).value);
-        return isNaN(v) || v < 0 ? 0 : v;
-    }
-
-    function calculateGameSeason(now) {
-        const diffInMs = now - START_DATE;
-        if (diffInMs < 0) return "Trước mùa 25";
-        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-        const seasonOffset = Math.floor(diffInDays / 28);
-        const currentSeason = START_SEASON + seasonOffset;
-        const remainingDays = diffInDays % 28;
-        const currentWeek = Math.floor(remainingDays / 7) + 1;
-        return `Mùa ${currentSeason} - Tuần ${currentWeek}`;
-    }
-
-    function simulateOptimal(S, W, Q, B, lv) {
-        if (lv <= 0) return { ok: true, log: [], rem: { s: S, w: W, q: Q } };
-        let stone = S, wood = W, ore = Q, box = B, log = [];
-        const nS = 1260 * lv, nW = 340 * lv, nQ = 130 * lv;
-
-        let bQ = Math.min(box, Math.max(0, nQ - ore));
-        if (bQ > 0) { ore += bQ; box -= bQ; log.push(`Dùng ${bQ} hộp → +${bQ} quặng`); }
-        
-        let bW = Math.min(box, Math.ceil(Math.max(0, nW - wood) / 4));
-        if (bW > 0) { wood += bW * 4; box -= bW; log.push(`Dùng ${bW} hộp → +${bW*4} gỗ`); }
-        
-        if (box > 0) { stone += box * 20; log.push(`Dùng ${box} hộp → +${box*20} đá`); box = 0; }
-
-        while (true) {
-            let changed = false;
-            let mQ = Math.max(0, nQ - ore);
-            let mW = Math.max(0, nW - wood);
-            let sToW = Math.min(Math.floor(stone / 5), mW + mQ * 4);
-            if (sToW > 0) { stone -= sToW * 5; wood += sToW; log.push(`Đổi ${sToW * 5} đá → +${sToW} gỗ`); changed = true; }
-            let wToO = Math.min(Math.floor(wood / 4), mQ);
-            if (wToO > 0) { wood -= wToO * 4; ore += wToO; log.push(`Đổi ${wToO * 4} gỗ → +${wToO} quặng`); changed = true; }
-            if (!changed) break;
+        function getVal(id) {
+            let element = document.getElementById(id);
+            if (!element) return 0;
+            let v = parseInt(element.value);
+            return isNaN(v) || v < 0 ? 0 : v;
         }
 
-        if (stone < nS || wood < nW || ore < nQ) return { ok: false };
-        return { ok: true, log: log, rem: { s: stone - nS, w: wood - nW, q: ore - nQ } };
-    }
+        function calculateGameSeason(now) {
+            const diffInMs = now - START_DATE;
+            if (diffInMs < 0) return "Trước mùa 25";
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+            const seasonOffset = Math.floor(diffInDays / 28);
+            const currentSeason = START_SEASON + seasonOffset;
+            const remainingDays = diffInDays % 28;
+            const currentWeek = Math.floor(remainingDays / 7) + 1;
+            return `Mùa ${currentSeason} - Tuần ${currentWeek}`;
+        }
 
-    function computeCannon() {
-        const S = getVal('stone'), W = getVal('wood'), Q = getVal('ore'), B = getVal('boxes');
-        const targetInput = document.getElementById('targetLevel').value;
-        const out = document.getElementById('output');
-        out.style.display = 'block';
+        function simulateOptimal(S, W, Q, B, lv) {
+            if (lv <= 0) return { ok: true, log: [], rem: { s: S, w: W, q: Q } };
+            let stone = S, wood = W, ore = Q, box = B, log = [];
+            const nS = 1260 * lv, nW = 340 * lv, nQ = 130 * lv;
 
-        let finalLv = 0;
-        if (targetInput !== "") {
-            finalLv = parseInt(targetInput);
-        } else {
-            let lo = 0, hi = 100000;
-            while (lo <= hi) {
-                let mid = Math.floor((lo + hi) / 2);
-                if (simulateOptimal(S, W, Q, B, mid).ok) { finalLv = mid; lo = mid + 1; }
-                else { hi = mid - 1; }
+            let bQ = Math.min(box, Math.max(0, nQ - ore));
+            if (bQ > 0) { ore += bQ; box -= bQ; log.push(`Dùng ${bQ} hộp → +${bQ} quặng`); }
+            
+            let bW = Math.min(box, Math.ceil(Math.max(0, nW - wood) / 4));
+            if (bW > 0) { wood += bW * 4; box -= bW; log.push(`Dùng ${bW} hộp → +${bW*4} gỗ`); }
+            
+            if (box > 0) { stone += box * 20; log.push(`Dùng ${box} hộp → +${box*20} đá`); box = 0; }
+
+            while (true) {
+                let changed = false;
+                let mQ = Math.max(0, nQ - ore);
+                let mW = Math.max(0, nW - wood);
+                let sToW = Math.min(Math.floor(stone / 5), mW + mQ * 4);
+                if (sToW > 0) { stone -= sToW * 5; wood += sToW; log.push(`Đổi ${sToW * 5} đá → +${sToW} gỗ`); changed = true; }
+                let wToO = Math.min(Math.floor(wood / 4), mQ);
+                if (wToO > 0) { wood -= wToO * 4; ore += wToO; log.push(`Đổi ${wToO * 4} gỗ → +${wToO} quặng`); changed = true; }
+                if (!changed) break;
+            }
+
+            if (stone < nS || wood < nW || ore < nQ) return { ok: false };
+            return { ok: true, log: log, rem: { s: stone - nS, w: wood - nW, q: ore - nQ } };
+        }
+
+        function computeCannon() {
+            const S = getVal('stone'), W = getVal('wood'), Q = getVal('ore'), B = getVal('boxes');
+            const targetInput = document.getElementById('targetLevel').value;
+            const out = document.getElementById('output');
+            if (!out) return;
+            out.style.display = 'block';
+
+            let finalLv = 0;
+            if (targetInput !== "") {
+                finalLv = parseInt(targetInput);
+            } else {
+                let lo = 0, hi = 100000;
+                while (lo <= hi) {
+                    let mid = Math.floor((lo + hi) / 2);
+                    if (simulateOptimal(S, W, Q, B, mid).ok) { finalLv = mid; lo = mid + 1; }
+                    else { hi = mid - 1; }
+                }
+            }
+
+            const res = simulateOptimal(S, W, Q, B, finalLv);
+            if (res.ok) {
+                const now = new Date();
+                const seasonStr = calculateGameSeason(now);
+                const fullTime = now.toLocaleTimeString('vi-VN') + " " + now.toLocaleDateString('vi-VN');
+                let logHtml = res.log.length > 0 ? res.log.join('<br>') : "Không cần đổi";
+                
+                out.innerHTML = `
+                    <b>Cấp tối đa:</b> ${finalLv}<br>
+                    <b>Tổng điểm:</b> ${(finalLv * 556000).toLocaleString()}<br><br>
+                    <b>Các bước đổi:</b><br><div style="margin-top:5px">${logHtml}</div><br>
+                    <b>Còn lại:</b><br>
+                    <ul style="margin-top:5px; padding-left:20px">
+                        <li>Đá: ${res.rem.s.toLocaleString()}</li>
+                        <li>Gỗ: ${res.rem.w.toLocaleString()}</li>
+                        <li>Quặng: ${res.rem.q.toLocaleString()}</li>
+                    </ul>
+                `;
+                saveHistory(finalLv, (finalLv * 556000), seasonStr, fullTime);
+            } else {
+                out.innerHTML = `<span style="color:red; font-weight:bold">❌ Không đủ tài nguyên cho cấp ${finalLv}</span>`;
+            }
+            renderHistory();
+        }
+
+        function saveHistory(lv, pts, sea, time) {
+            let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
+            history.push({ lv: lv, pts: pts, sea: sea, time: time });
+            if (history.length > 100) history.shift();
+            localStorage.setItem("cannon_v7_final", JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            const box = document.getElementById("historyBox");
+            const countDisplay = document.getElementById("historyCount");
+            if (!box || !countDisplay) return;
+
+            let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
+            countDisplay.innerText = `(${history.length}/100)`;
+
+            if (history.length === 0) {
+                box.innerHTML = "<i>Chưa có dữ liệu</i>";
+                return;
+            }
+            
+            box.innerHTML = history.slice().reverse().map((h, index) => {
+                const realIndex = history.length - index;
+                return `
+                    <div class="history-item">
+                        <div class="icon-text">
+                            <span class="history-index">#${realIndex}</span> 
+                            🕒 <b>${h.time}</b>
+                        </div>
+                        <div class="icon-text">⚔️ Lv: ${h.lv} | Điểm: ${h.pts.toLocaleString()}</div>
+                        <div class="icon-text">📅 ${h.sea}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearHistory() {
+            if(confirm("Xóa toàn bộ lịch sử?")) {
+                localStorage.removeItem("cannon_v7_final");
+                renderHistory();
             }
         }
 
-        const res = simulateOptimal(S, W, Q, B, finalLv);
-        if (res.ok) {
-            const now = new Date();
-            const seasonStr = calculateGameSeason(now);
-            const fullTime = now.toLocaleTimeString('vi-VN') + " " + now.toLocaleDateString('vi-VN');
-            let logHtml = res.log.length > 0 ? res.log.join('<br>') : "Không cần đổi";
-            
-            out.innerHTML = `
-                <b>Cấp tối đa:</b> ${finalLv}<br>
-                <b>Tổng điểm:</b> ${(finalLv * 556000).toLocaleString()}<br><br>
-                <b>Các bước đổi:</b><br><div style="margin-top:5px">${logHtml}</div><br>
-                <b>Còn lại:</b><br>
-                <ul style="margin-top:5px; padding-left:20px">
-                    <li>Đá: ${res.rem.s.toLocaleString()}</li>
-                    <li>Gỗ: ${res.rem.w.toLocaleString()}</li>
-                    <li>Quặng: ${res.rem.q.toLocaleString()}</li>
-                </ul>
-            `;
-            saveHistory(finalLv, (finalLv * 556000), seasonStr, fullTime);
-        } else {
-            out.innerHTML = `<span style="color:red; font-weight:bold">❌ Không đủ tài nguyên cho cấp ${finalLv}</span>`;
-        }
+        // LẮP SỰ KIỆN QUA ADDEVENTLISTENER (Không sợ bị xóa script)
+        const btnCalc = document.getElementById('btnComputeCannon');
+        const btnClear = document.getElementById('btnClearHistory');
+        
+        if (btnCalc) btnCalc.addEventListener('click', computeCannon);
+        if (btnClear) btnClear.addEventListener('click', clearHistory);
+
+        // Chạy kết xuất lịch sử ngay khi tab được nạp thành công
         renderHistory();
-    }
-
-    function saveHistory(lv, pts, sea, time) {
-        let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
-        history.push({ lv: lv, pts: pts, sea: sea, time: time });
-        if (history.length > 100) history.shift();
-        localStorage.setItem("cannon_v7_final", JSON.stringify(history));
-    }
-
-    function renderHistory() {
-        const box = document.getElementById("historyBox");
-        const countDisplay = document.getElementById("historyCount");
-        let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
-        
-        countDisplay.innerText = `(${history.length}/100)`;
-
-        if (history.length === 0) {
-            box.innerHTML = "<i>Chưa có dữ liệu</i>";
-            return;
-        }
-        
-        // Render với số thứ tự #
-        box.innerHTML = history.slice().reverse().map((h, index) => {
-            // Tính số thứ tự thực (vì đang reverse nên cần tính toán một chút)
-            const realIndex = history.length - index;
-            return `
-                <div class="history-item">
-                    <div class="icon-text">
-                        <span class="history-index">#${realIndex}</span> 
-                        🕒 <b>${h.time}</b>
-                    </div>
-                    <div class="icon-text">⚔️ Lv: ${h.lv} | Điểm: ${h.pts.toLocaleString()}</div>
-                    <div class="icon-text">📅 ${h.sea}</div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function clearHistory() {
-        if(confirm("Xóa toàn bộ lịch sử?")) {
-            localStorage.removeItem("cannon_v7_final");
-            renderHistory();
-        }
-    }
-    renderHistory();
+    })();
 </script>
