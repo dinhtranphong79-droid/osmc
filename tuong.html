@@ -1,5 +1,5 @@
 <style>
-/* Giữ nguyên CSS gốc của bạn */
+/* Giữ nguyên toàn bộ CSS hệ thống màu sắc của bạn */
 :root{
   --bg:#ffffff; --card:#f8f8f8; --muted:#555555; --accent:#60a5fa;
   --fire:#e11d48; --water:#0284c7; --wind:#10b981; --light:#facc15;
@@ -74,7 +74,7 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
     <div id="modalHeader" class="modal-header-tuong">Kết quả</div>
     <div id="modalBody" class="modal-body-tuong"></div>
     <div class="modal-footer-tuong">
-      <button onclick="closeModalHero()">Đóng</button>
+      <button id="btnCloseModalHero">Đóng</button>
     </div>
   </div>
 </div>
@@ -135,11 +135,16 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
       return {isExp:false,final_star:star,final_bar:bar,cards_consumed:consumed,cards_left:cards,missing_to_5:ms};
     }
 
-    window.closeModalHero = function(){ $("resultModal").style.display="none"; }
+    function closeModalHero(){ 
+        const modal = $("resultModal");
+        if(modal) modal.style.display="none"; 
+    }
 
     function showModalResult(hero){
       const res = calculateUpgrade(hero);
       const modal=$("resultModal"), header=$("modalHeader"), body=$("modalBody"), box=$("modalBox");
+      if(!modal || !header || !body || !box) return;
+      
       box.className="modal-content-tuong sys-"+(res.isExp ? "Exp" : hero.system);
       
       if(res.isExp){
@@ -155,8 +160,9 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
     }
 
     function renderHeroList(){
-      const list=$("heroList"); list.innerHTML="";
-      const f=($("filterHero").value||"").trim().toLowerCase();
+      const list=$("heroList"); if(!list) return;
+      list.innerHTML="";
+      const f=($("filterHero") && $("filterHero").value || "").trim().toLowerCase();
       const currentSet = SYSTEMS.includes(state.activeTab) ? heroesData[state.activeTab] : expList[state.activeTab];
       
       currentSet.forEach(n => {
@@ -189,14 +195,20 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
             bSel.onchange = (e) => { h.current_bar = parseInt(e.target.value); saveState(); renderSummary(); };
         }
 
-        box.querySelector(".in-cards").onchange = (e) => { h.cards_owned = parseInt(e.target.value)||0; saveState(); renderSummary(); };
+        // Tối ưu hóa: Dùng sự kiện 'input' để cập nhật dữ liệu liên tục thay vì đợi 'change'
+        box.querySelector(".in-cards").oninput = (e) => { 
+            h.cards_owned = parseInt(e.target.value)||0; 
+            saveState(); 
+            renderSummary(); 
+        };
         box.querySelector(".btn-calc-one").onclick = () => showModalResult(h);
         list.appendChild(box);
       });
     }
 
     function renderSummary(){
-      const box=$("summary"); box.innerHTML="";
+      const box=$("summary"); if(!box) return;
+      box.innerHTML="";
       const totals={}; [...SYSTEMS, ...Object.keys(expList)].forEach(s=>totals[s]=0);
       let grandTotal = 0;
 
@@ -215,14 +227,20 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
     }
 
     function renderTabs(){
-      const tabs=$("tabs-hero"); tabs.innerHTML="";
+      const tabs=$("tabs-hero"); if(!tabs) return;
+      tabs.innerHTML="";
       [...SYSTEMS, ...Object.keys(expList)].forEach(s=>{
         const t=document.createElement("div"); 
         t.className="tab-tuong"+(state.activeTab===s?" active":"");
         t.textContent=s;
         const color=s==="Lửa"?"var(--fire)":s==="Cung"?"var(--light)":s==="Độc"?"var(--wind)":s==="Băng"?"var(--water)":"var(--exp)";
         if(state.activeTab===s) t.style.background = color;
-        t.onclick=()=>{ state.activeTab=s; renderTabs(); renderHeroList(); $("systemTitle").innerText=s; };
+        t.onclick=()=>{ 
+            state.activeTab=s; 
+            renderTabs(); 
+            renderHeroList(); 
+            if($("systemTitle")) $("systemTitle").innerText=s; 
+        };
         tabs.appendChild(t);
       });
     }
@@ -237,9 +255,15 @@ input[type="number"], select, input[type="text"] { width:100%; padding:6px; bord
       });
     }
 
-    $("filterHero").oninput=renderHeroList;
-    $("btnCalcAll").onclick=renderSummary;
+    // Đăng ký các sự kiện bằng Element Listener an toàn 
+    if($("filterHero")) $("filterHero").oninput = renderHeroList;
+    if($("btnCalcAll")) $("btnCalcAll").onclick = renderSummary;
+    if($("btnCloseModalHero")) $("btnCloseModalHero").onclick = closeModalHero;
     
-    loadState(); renderTabs(); renderHeroList(); renderSummary();
+    // Khởi chạy hệ thống
+    loadState(); 
+    renderTabs(); 
+    renderHeroList(); 
+    renderSummary();
 })();
 </script>
