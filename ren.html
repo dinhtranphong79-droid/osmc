@@ -1,12 +1,153 @@
-<script src="https://cdn.tailwindcss.com"></script>
+<div class="tab-content-ren">
+<style>
+.tab-content-ren{
+    font-family: Arial,sans-serif;
+    color:#1e293b;
+}
 
-<div class="bg-slate-50 min-h-screen p-4 md:p-8">
-<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-    <div class="bg-blue-600 p-6 text-white">
+.tab-content-ren .main-card{
+    max-width:1000px;
+    margin:auto;
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid #e2e8f0;
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+}
+
+.tab-content-ren .header{
+    background:#2563eb;
+    color:white;
+    padding:20px;
+}
+
+.tab-content-ren .header h1{
+    margin:0;
+    font-size:24px;
+}
+
+.tab-content-ren .content{
+    padding:20px;
+}
+
+.tab-content-ren h2{
+    font-size:18px;
+    margin-bottom:15px;
+    border-bottom:1px solid #e2e8f0;
+    padding-bottom:8px;
+}
+
+.tab-content-ren .grid-3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+}
+
+.tab-content-ren .grid-2{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+}
+
+.tab-content-ren .field{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#f8fafc;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #e2e8f0;
+}
+
+.tab-content-ren input,
+.tab-content-ren select{
+    padding:6px;
+    border:1px solid #cbd5e1;
+    border-radius:6px;
+    width:80px;
+    text-align:center;
+}
+
+.tab-content-ren .buff-boxes{
+    display:flex;
+    gap:15px;
+    margin:20px 0;
+}
+
+.tab-content-ren .buff-box{
+    flex:1;
+    text-align:center;
+    padding:15px;
+    border-radius:10px;
+}
+
+.tab-content-ren .blue{
+    background:#eff6ff;
+}
+
+.tab-content-ren .green{
+    background:#ecfdf5;
+}
+
+.tab-content-ren .equip-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.tab-content-ren .equip-item{
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.tab-content-ren .btn{
+    width:100%;
+    background:#2563eb;
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:15px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.tab-content-ren .btn:hover{
+    background:#1d4ed8;
+}
+
+.tab-content-ren .result{
+    margin-top:20px;
+    padding:15px;
+    background:#f1f5f9;
+    border-radius:8px;
+}
+
+@media(max-width:768px){
+
+.tab-content-ren .grid-3,
+.tab-content-ren .grid-2,
+.tab-content-ren .equip-grid{
+    grid-template-columns:1fr;
+}
+
+.tab-content-ren .buff-boxes{
+    flex-direction:column;
+}
+
+}
+</style>
+<div class="main-card">
+    <div class="header">
         <h1 class="text-2xl font-bold">Cường hóa trang bị tướng</h1>
     </div>
 
-    <div class="p-8">
+    <div class="content">
         <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Tài nguyên hiện có</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="flex items-center justify-between"><label>Búa rèn:</label><input type="number" id="resBua" class="w-24 p-2 border rounded text-center"></div>
@@ -30,9 +171,9 @@
         <h2 class="font-bold text-lg text-slate-700 mb-4">Danh sách trang bị</h2>
         <div id="equipmentSlots" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8"></div>
 
-        <button onclick="optimizeRen()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg">Tính</button>
+        <button onclick="optimizeRen()" class="btn">Tính</button>
 
-        <div id="result" class="mt-6 p-4 bg-slate-100 rounded hidden whitespace-pre-line"></div>
+        <div id="result" class="result hidden"></div>
     </div>
 </div>
 
@@ -51,7 +192,8 @@
 container.innerHTML = '';
 
 for(let i=1; i<=15; i++) {
-        container.innerHTML += `<div class="bg-gray-50 p-2 rounded border flex items-center justify-between"><span class="font-bold text-xs">#${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
+       container.innerHTML += `
+<div class="equip-item"><span class="font-bold text-xs">#${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
     }
 
     document.querySelectorAll('.pct-input').forEach(i => i.addEventListener('input', updatePct));
