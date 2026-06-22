@@ -1,1 +1,114 @@
+<script src="https://cdn.tailwindcss.com"></script>
 
+<div class="bg-slate-50 min-h-screen p-4 md:p-8">
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+    <div class="bg-blue-600 p-6 text-white">
+        <h1 class="text-2xl font-bold">Cường hóa trang bị tướng</h1>
+    </div>
+
+    <div class="p-8">
+        <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Tài nguyên hiện có</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="flex items-center justify-between"><label>Búa rèn:</label><input type="number" id="resBua" class="w-24 p-2 border rounded text-center"></div>
+            <div class="flex items-center justify-between"><label>Máu titan:</label><input type="number" id="resMau" class="w-24 p-2 border rounded text-center"></div>
+            <div class="flex items-center justify-between"><label>Bình nguyên tố:</label><input type="number" id="resBinh" class="w-24 p-2 border rounded text-center"></div>
+        </div>
+
+        <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Đối đầu</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6">
+            <div class="flex items-center justify-between"><label>Chuyên gia đối đầu 1 (%):</label><input type="number" id="cg1" class="pct-input w-24 p-2 border rounded text-center"></div>
+            <div class="flex items-center justify-between"><label>Chuyên gia đối đầu 2 (%):</label><input type="number" id="cg2" class="pct-input w-24 p-2 border rounded text-center"></div>
+            <div class="flex items-center justify-between"><label>Đối đầu - Tiệm rèn (%):</label><input type="number" id="tr" class="pct-input w-24 p-2 border rounded text-center"></div>
+            <div class="flex items-center justify-between"><label>Đối đầu - Trang bị tướng (%):</label><input type="number" id="tb" class="pct-input w-24 p-2 border rounded text-center"></div>
+        </div>
+
+        <div class="flex gap-4 mb-6">
+            <div class="flex-1 bg-blue-50 p-4 rounded text-center"><p class="text-sm font-semibold">Tổng % Buff Búa</p><span id="sumBua" class="text-xl font-bold">0%</span></div>
+            <div class="flex-1 bg-emerald-50 p-4 rounded text-center"><p class="text-sm font-semibold">Tổng % Buff Trang bị</p><span id="sumTrangbi" class="text-xl font-bold">0%</span></div>
+        </div>
+
+        <h2 class="font-bold text-lg text-slate-700 mb-4">Danh sách trang bị</h2>
+        <div id="equipmentSlots" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8"></div>
+
+        <button onclick="optimizeRen()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg">Tính</button>
+
+        <div id="result" class="mt-6 p-4 bg-slate-100 rounded hidden whitespace-pre-line"></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const table = {
+        'T5': [[0,0],[280,0],[470,0],[680,0],[900,0],[1140,0],[1400,0],[1660,0],[1930,0],[2220,0],[2510,320],[2810,360],[3120,400],[3430,440],[3750,480],[4080,525],[4410,565],[4750,605],[5100,650],[5450,695]],
+        'T6': [[0,0],[1370,0],[2320,0],[3370,0],[4500,0],[5700,0],[6980,0],[8280,0],[9650,0],[11070,0],[12520,1595],[14020,1785],[15560,1980],[17130,2180],[18740,2380],[20380,2590],[22050,2805],[23750,3020],[25480,3240],[27240,3460]],
+        'T7': [[0,0],[6825,0],[11561,0],[16804,0],[22459,0],[28466,0],[34783,0],[41376,0],[48223,0],[55301,0],[62596,7950],[70093,8902],[77779,9878],[85645,10877],[93682,11898],[101881,12940],[110235,14001],[118738,15081],[127384,16179],[136168,17294]],
+        'T8': [[0,0],[34123,0],[57805,0],[84020,0],[112297,0],[142332,0],[173934,0],[206882,0],[241114,0],[276507,0],[312980,39751],[350483,44551],[388895,49392],[428226,54387],[468409,59491],[509404,64698],[551178,70003],[593691,75403],[636922,80893],[680841,86471]],
+        'T9': [[0,0],[170614,0],[289032,0],[420902,0],[561484,0],[711661,0],[886169,0],[1034412,0],[1205568,0],[1382536,0],[1564901,198753],[1752314,222555],[1944477,246961],[2141129,271937],[2347024,297455],[2547020,323488],[2755878,350015],[2968456,377013],[3184609,404446],[3404203,432356]]
+    };
+
+    const container = document.getElementById('equipmentSlots');
+
+container.innerHTML = '';
+
+for(let i=1; i<=15; i++) {
+        container.innerHTML += `<div class="bg-gray-50 p-2 rounded border flex items-center justify-between"><span class="font-bold text-xs">#${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
+    }
+
+    document.querySelectorAll('.pct-input').forEach(i => i.addEventListener('input', updatePct));
+    function updatePct() {
+        const cg1 = parseFloat(document.getElementById('cg1').value)||0, cg2 = parseFloat(document.getElementById('cg2').value)||0, tr = parseFloat(document.getElementById('tr').value)||0, tb = parseFloat(document.getElementById('tb').value)||0;
+        document.getElementById('sumBua').innerText = (cg1 + cg2 + tr) + "%";
+        document.getElementById('sumTrangbi').innerText = (cg1 + cg2 + tb) + "%";
+    }
+
+    window.optimizeRen = function() {
+        let totalBuaOwned = parseInt(document.getElementById('resBua').value) || 0;
+        let maxBinh = parseInt(document.getElementById('resBinh').value) || 0;
+        let maxMau = parseInt(document.getElementById('resMau').value) || 0;
+
+        // Công thức mới: Buff / 100
+        const buffBua = parseFloat(document.getElementById('sumBua').innerText) / 100;
+        const buffTb = parseFloat(document.getElementById('sumTrangbi').innerText) / 100;
+
+        let items = [];
+        document.querySelectorAll('#equipmentSlots > div').forEach((div, idx) => {
+            items.push({ t: div.querySelector('.tVal').value, lvl: parseInt(div.querySelector('.lVal').value), id: idx + 1 });
+        });
+
+        items.sort((a, b) => (b.t.localeCompare(a.t)) || (b.lvl - a.lvl));
+
+        let usedBinh = 0, usedMau = 0;
+        let resHtml = "<h3 class='font-bold mb-2'>Các bước nâng cấp:</h3><ul class='text-sm space-y-1'>";
+
+        items.forEach(item => {
+            while (item.lvl < 20) {
+                let costs = table[item.t][item.lvl];
+                if (maxBinh >= costs[0] && maxMau >= costs[1]) {
+                    maxBinh -= costs[0];
+                    maxMau -= costs[1];
+                    usedBinh += costs[0];
+                    usedMau += costs[1];
+                    item.lvl++;
+                    resHtml += `<li>✅ Trang bị ${item.id} (${item.t}): Lên cấp ${item.lvl}</li>`;
+                } else break;
+            }
+        });
+
+        let pBua = totalBuaOwned * 100 * buffBua;
+        let pMau = (usedMau / 25) * 280 * buffTb;
+        let pBinh = (usedBinh / 125) * 140 * buffTb;
+
+        resHtml += `</ul><div class='mt-4 p-4 bg-blue-600 text-white rounded-lg font-bold'>
+            <p>Điểm búa rèn: ${Math.round(pBua).toLocaleString()}</p>
+            <p>Điểm trang bị: ${Math.round(pMau + pBinh).toLocaleString()}</p>
+            <p class='text-lg border-t mt-2 pt-2'>TỔNG ĐIỂM: ${Math.round(pBua + pMau + pBinh).toLocaleString()}</p>
+        </div>`;
+            
+        document.getElementById('result').innerHTML = resHtml;
+        document.getElementById('result').classList.remove('hidden');
+    };
+})();
+</script>
+
+</div>
+</div>
