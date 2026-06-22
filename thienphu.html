@@ -193,13 +193,13 @@
       <div class="input-item">
         <label>Chuyên gia đối đầu 2:</label>
         <div class="inner-wrap">
-          <input type="number" id="buffDdLinh" class="input-small" value="0" min="0"> <b>%</b>
+          <input type="number" id="buffCg2" class="input-small" value="0" min="0"> <b>%</b>
         </div>
       </div>
       <div class="input-item">
         <label>Đối đầu - Tiến hóa lính:</label>
         <div class="inner-wrap">
-          <input type="number" id="buffCg2" class="input-small" value="0" min="0"> <b>%</b>
+          <input type="number" id="buffDdLinh" class="input-small" value="0" min="0"> <b>%</b>
         </div>
       </div>
       <div class="input-item">
@@ -384,7 +384,11 @@
     }
 
     const gm2Done = Array.from(document.querySelectorAll('.tab-content-thienphu .gm2Done')).map(i=>{ let v = Math.floor(Number(i.value)||0); if(v<0)v=0; if(v>6)v=6; return v; });
-    let gm1Pool = totalGM1Up;
+   const totalGM1Owned =
+    gm1Done.reduce((sum, v) => sum + v, 0)
+    + totalGM1Up;
+
+let gm1Pool = totalGM1Owned;
     for(let t=0;t<10;t++){
       const remain = 6 - (gm2Done[t]||0);
       const block = document.getElementById(`gm2Block-${t}`);
@@ -400,14 +404,33 @@
     }
 
     const troopInputs = Array.from(document.querySelectorAll('.tab-content-thienphu .troop-input'));
-    const baseTroopPoints = troopInputs.reduce((s,el,idx)=> s + (Math.floor(Number(el.value)||0) * [800,4000,20000,100000][idx]), 0);
-    const finalTroopPoints = Math.floor(baseTroopPoints * multLinh);
 
-    const pointGM1 = usedGM1Books * season.bookPoint;
-    const pointGM2 = usedGM2Books * season.bookPoint + usedGM2Crowns * season.crownPoint;
-    const finalThienPhuPoints = Math.floor((pointGM1 + pointGM2) * multThienPhu);
+const baseTroopPoints =
+  troopInputs.reduce(
+    (s,el,idx)=> s + (Math.floor(Number(el.value)||0) * [800,4000,20000,100000][idx]),
+    0
+  );
 
-    const totalPoints = finalThienPhuPoints + finalTroopPoints;
+const pointGM1 =
+  usedGM1Books * season.bookPoint;
+
+const pointGM2 =
+  usedGM2Books * season.bookPoint +
+  usedGM2Crowns * season.crownPoint;
+
+// Giữ nguyên số thực
+const finalTroopPoints =
+  baseTroopPoints * multLinh;
+
+const finalThienPhuPoints =
+  (pointGM1 + pointGM2) * multThienPhu;
+
+// Chỉ làm tròn một lần cuối cùng
+const totalPoints =
+  Math.round(
+    finalTroopPoints +
+    finalThienPhuPoints
+  );
     const totalDisplay = document.getElementById('totalDisplay'); 
     if(totalDisplay) totalDisplay.textContent = `Tổng điểm: ${Number(totalPoints).toLocaleString('vi-VN')}`;
   }
