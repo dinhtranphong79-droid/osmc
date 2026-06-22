@@ -127,7 +127,16 @@
     background:#f1f5f9;
     border-radius:8px;
 }
+.tab-content-ren .input-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+}
 
+.tab-content-ren .input-row:last-child{
+    margin-bottom:0;
+}
 @media(max-width:768px){
 
 .tab-content-ren .grid-3,
@@ -149,24 +158,71 @@
 
     <div class="content">
         <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Tài nguyên hiện có</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="flex items-center justify-between"><label>Búa rèn:</label><input type="number" id="resBua" class="w-24 p-2 border rounded text-center"></div>
-            <div class="flex items-center justify-between"><label>Máu titan:</label><input type="number" id="resMau" class="w-24 p-2 border rounded text-center"></div>
-            <div class="flex items-center justify-between"><label>Bình nguyên tố:</label><input type="number" id="resBinh" class="w-24 p-2 border rounded text-center"></div>
+        <div class="mb-8">
+           <div class="input-row">
+    <label>Búa rèn:</label>
+    <input type="number" id="resBua" class="w-24 p-2 border rounded text-center">
+</div>
+
+<div class="input-row">
+    <label>Máu titan:</label>
+    <input type="number" id="resMau" class="w-24 p-2 border rounded text-center">
+</div>
+
+<div class="input-row">
+    <label>Bình nguyên tố:</label>
+    <input type="number" id="resBinh" class="w-24 p-2 border rounded text-center">
+</div>
+</div>
+        <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Đối đầu (Để trống nếu tính lcch)</h2>
+      <div class="mb-6">
+           <div class="input-row">
+    <label>Chuyên gia đối đầu 1 (%):</label>
+    <input type="number" id="cg1" class="pct-input w-24 p-2 border rounded text-center">
+</div>
+
+
+<div class="input-row">
+    <label>Chuyên gia đối đầu 2 (%):</label>
+    <input type="number" id="cg2" class="pct-input w-24 p-2 border rounded text-center">
+</div>
+
+<div class="input-row">
+    <label>Đối đầu - Tiệm rèn (%):</label>
+    <input type="number" id="tr" class="pct-input w-24 p-2 border rounded text-center">
+</div>
+
+<div class="input-row">
+    <label>Đối đầu - Trang bị tướng (%):</label>
+    <input type="number" id="tb" class="pct-input w-24 p-2 border rounded text-center">
+</div>
         </div>
 
-        <h2 class="font-bold text-lg text-slate-700 mb-4 border-b pb-2">Đối đầu</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6">
-            <div class="flex items-center justify-between"><label>Chuyên gia đối đầu 1 (%):</label><input type="number" id="cg1" class="pct-input w-24 p-2 border rounded text-center"></div>
-            <div class="flex items-center justify-between"><label>Chuyên gia đối đầu 2 (%):</label><input type="number" id="cg2" class="pct-input w-24 p-2 border rounded text-center"></div>
-            <div class="flex items-center justify-between"><label>Đối đầu - Tiệm rèn (%):</label><input type="number" id="tr" class="pct-input w-24 p-2 border rounded text-center"></div>
-            <div class="flex items-center justify-between"><label>Đối đầu - Trang bị tướng (%):</label><input type="number" id="tb" class="pct-input w-24 p-2 border rounded text-center"></div>
-        </div>
+       <div style="
+    margin:24px 0;
+    text-align:right;
+">
 
-        <div class="flex gap-4 mb-6">
-            <div class="flex-1 bg-blue-50 p-4 rounded text-center"><p class="text-sm font-semibold">Tổng % tăng thêm - Búa rèn</p><span id="sumBua" class="text-xl font-bold">0%</span></div>
-            <div class="flex-1 bg-emerald-50 p-4 rounded text-center"><p class="text-sm font-semibold">Tổng % tăng thêm - Trang bị tướng</p><span id="sumTrangbi" class="text-xl font-bold">0%</span></div>
-        </div>
+    <div style="
+        color:#16a34a;
+        font-size:14px;
+        font-weight:700;
+        margin-bottom:8px;
+    ">
+        Tổng % tăng thêm - Búa rèn:
+        <span id="sumBua">0%</span>
+    </div>
+
+    <div style="
+        color:#2563eb;
+        font-size:14px;
+        font-weight:700;
+    ">
+        Tổng % tăng thêm - Trang bị tướng:
+        <span id="sumTrangbi">0%</span>
+    </div>
+
+</div>
 
         <h2 class="font-bold text-lg text-slate-700 mb-4">Danh sách trang bị</h2>
         <div id="equipmentSlots" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8"></div>
@@ -193,7 +249,7 @@ container.innerHTML = '';
 
 for(let i=1; i<=15; i++) {
        container.innerHTML += `
-<div class="equip-item"><span class="font-bold text-xs">#${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
+<div class="equip-item"><span class="font-bold text-xs">Trang bị số ${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
     }
 
     document.querySelectorAll('.pct-input').forEach(i => i.addEventListener('input', updatePct));
@@ -209,9 +265,17 @@ for(let i=1; i<=15; i++) {
         let maxMau = parseInt(document.getElementById('resMau').value) || 0;
 
         // Công thức mới: Buff / 100
-        const buffBua = parseFloat(document.getElementById('sumBua').innerText) / 100;
-        const buffTb = parseFloat(document.getElementById('sumTrangbi').innerText) / 100;
+      const buffBua =
+    Math.max(
+        1,
+        (parseFloat(document.getElementById('sumBua').innerText) || 0) / 100
+    );
 
+const buffTb =
+    Math.max(
+        1,
+        (parseFloat(document.getElementById('sumTrangbi').innerText) || 0) / 100
+    );
         let items = [];
         document.querySelectorAll('#equipmentSlots > div').forEach((div, idx) => {
             items.push({ t: div.querySelector('.tVal').value, lvl: parseInt(div.querySelector('.lVal').value), id: idx + 1 });
@@ -219,22 +283,52 @@ for(let i=1; i<=15; i++) {
 
         items.sort((a, b) => (b.t.localeCompare(a.t)) || (b.lvl - a.lvl));
 
-        let usedBinh = 0, usedMau = 0;
-        let resHtml = "<h3 class='font-bold mb-2'>Các bước nâng cấp:</h3><ul class='text-sm space-y-1'>";
+      let usedBinh = 0,
+    usedMau = 0;
 
-        items.forEach(item => {
-            while (item.lvl < 20) {
-                let costs = table[item.t][item.lvl];
-                if (maxBinh >= costs[0] && maxMau >= costs[1]) {
-                    maxBinh -= costs[0];
-                    maxMau -= costs[1];
-                    usedBinh += costs[0];
-                    usedMau += costs[1];
-                    item.lvl++;
-                    resHtml += `<li>✅ Trang bị ${item.id} (${item.t}): Lên cấp ${item.lvl}</li>`;
-                } else break;
-            }
-        });
+let step = 1;
+
+let resHtml =
+"<h3 class='font-bold mb-2'>Các bước nâng cấp:</h3><ul class='text-sm space-y-1'>";
+
+items.forEach(item => {
+
+    let startLvl = item.lvl;
+    let upgraded = false;
+
+    while (item.lvl < 20) {
+
+        let costs = table[item.t][item.lvl];
+
+        if (maxBinh >= costs[0] && maxMau >= costs[1]) {
+
+            maxBinh -= costs[0];
+            maxMau -= costs[1];
+
+            usedBinh += costs[0];
+            usedMau += costs[1];
+
+            item.lvl++;
+            upgraded = true;
+
+        } else {
+            break;
+        }
+    }
+
+    if(upgraded){
+      resHtml += `
+<li>
+    <b>B${step}</b>:
+    Trang bị ${item.id} (${item.t})
+    <span style="color:#2563eb;font-weight:bold">
+        Lv${startLvl} → Lv${item.lvl}
+    </span>
+</li>`;
+        step++;
+    }
+
+});
 
         let pBua = totalBuaOwned * 100 * buffBua;
         let pMau = (usedMau / 25) * 280 * buffTb;
