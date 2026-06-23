@@ -1,1 +1,295 @@
 
+<style>
+  .section-title{
+    text-align:center;
+    color:#1e40af;
+    font-weight:bold;
+    margin:15px 0 10px;
+    padding-bottom:6px;
+    border-bottom:1px solid #dbeafe;
+}
+
+.control-box label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+.control-box input[type="number"]{
+    width:120px;
+}
+
+.t-card .lvl{
+    width:60px;
+}
+
+
+.total-bonus{
+    color:#2563eb;
+    font-size:13px;
+    font-weight:bold;
+    margin-top:6px;
+    text-align:left;
+}
+  body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+  h1 { text-align: center; color: #1e40af; }
+  
+  /* Khung nhập liệu chung */
+  .control-box { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+  .row { display: flex; justify-content: space-around; margin-bottom: 15px; }
+  .grid-bonus { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; border-top: 1px solid #ddd; padding-top: 15px; }
+  
+  
+  .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+  .t-card { background: #ffffff; border-radius: 8px; padding: 10px; width: 300px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+  .buoi { display: flex; align-items: center; justify-content: space-between; padding: 5px; border-radius: 5px; margin-bottom: 5px; font-weight: bold; color: #fff; }
+  
+  /* Màu sắc */
+  .xanh-duong { background-color: #3B82F6; } .do { background-color: #EF4444; }
+  .xanh-ngoc { background-color: #14B8A6; } .tim { background-color: #A855F7; }
+  .vang { background-color: #FACC15; color: #333; } .xanh-la { background-color: #22C55E; }
+  
+  input {
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+  button { display: block; width: 100%; max-width: 300px; margin: 20px auto; padding: 12px; border: none; border-radius: 5px; background: #1e40af; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold; }
+  .summary { margin: 20px auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); max-width: 600px; }
+</style>
+</head>
+<body>
+
+<h1></h1>
+
+<div class="control-box">
+
+    <div class="section-title">TÀI NGUYÊN</div>
+
+    <label>
+        Thuốc Ánh sáng
+        <input type="number" id="thuocThu" value="0">
+    </label>
+
+    <label>
+        Thuốc Tăng cường
+        <input type="number" id="thuocTangCuong" value="0">
+    </label>
+
+    <label>
+        Thuốc May mắn
+        <input type="number" id="thuocMayMan" value="0">
+    </label>
+
+    <div class="section-title">ĐỐI ĐẦU (Để trống nếu tính lcch)</div>
+
+    <label>
+        % Đối đầu - Thuốc phù thủy
+        <input type="number" class="bonus" id="bonus_thuoc" value="0">
+    </label>
+
+    <label>
+        % Đối đầu - Kim cương phù thủy
+        <input type="number" class="bonus" id="bonus_kc" value="0">
+    </label>
+
+    <label>
+        % Chuyên gia đối đầu I
+        <input type="number" class="bonus" id="cgd1" value="0">
+    </label>
+
+    <label>
+        % Chuyên gia đối đầu II
+        <input type="number" class="bonus" id="cgd2" value="0">
+    </label>
+
+    <div class="total-bonus" id="displayThuocBonus">
+        % tăng thêm - Thuốc ánh sáng: 0%
+    </div>
+
+    <div class="total-bonus" id="displayNgocBonus">
+        % tăng thêm - Ngọc: 0%
+    </div>
+
+</div>
+
+<div class="container" id="tContainer"></div>
+
+<button onclick="tinhToan()">Tính & Gợi ý nâng</button>
+
+<div class="summary" id="summary" style="display:none;">
+  <h2>Bảng tổng kết</h2>
+  <p id="summaryDetail"></p>
+</div>
+
+<script>
+function updateBonusDisplay(){
+
+    const thuoc =
+        (parseFloat(document.getElementById('bonus_thuoc').value) || 0) +
+        (parseFloat(document.getElementById('cgd1').value) || 0) +
+        (parseFloat(document.getElementById('cgd2').value) || 0);
+
+    const ngoc =
+        (parseFloat(document.getElementById('bonus_kc').value) || 0) +
+        (parseFloat(document.getElementById('cgd1').value) || 0) +
+        (parseFloat(document.getElementById('cgd2').value) || 0);
+
+    document.getElementById('displayThuocBonus').innerText =
+        "% tăng thêm - Thuốc ánh sáng: " + thuoc + "%";
+
+    document.getElementById('displayNgocBonus').innerText =
+        "% tăng thêm - Ngọc: " + ngoc + "%";
+}
+
+document.querySelectorAll('.bonus').forEach(el=>{
+    el.addEventListener('input', updateBonusDisplay);
+});
+
+updateBonusDisplay();
+
+const GemData = {
+
+T1:{
+boost:[30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30],
+luck:[0,0,0,0,0,0,0,0,0,5,5,5,5,5,5,5,5,5,5,5]
+},
+
+T2:{
+boost:[90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90,90],
+luck:[0,0,0,0,0,0,0,0,0,20,20,20,20,20,20,20,20,20,20,20]
+},
+
+T3:{
+boost:[430,430,430,430,430,430,430,430,430,430,430,430,430,430,430,430,430,430,430,430],
+luck:[0,0,0,0,0,0,0,0,0,80,80,80,80,80,80,80,80,80,80,80]
+},
+
+T4:{
+boost:[2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110,2110],
+luck:[0,0,0,0,0,0,0,0,0,400,400,400,400,400,400,400,400,400,400,400]
+},
+
+T5:{
+boost:[10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530,10530],
+luck:[0,0,0,0,0,0,0,0,0,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000,2000]
+},
+
+T6:{
+boost:[52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640,52640],
+luck:[0,0,0,0,0,0,0,0,0,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000]
+},
+
+T7:{
+boost:[263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160,263160],
+luck:[0,0,0,0,0,0,0,0,0,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000,50000]
+},
+
+T8:{
+boost:[1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790,1315790],
+luck:[0,0,0,0,0,0,0,0,0,250000,250000,250000,250000,250000,250000,250000,250000,250000,250000,250000]
+},
+
+T9:{
+boost:[6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950,6578950],
+luck:[0,0,0,0,0,0,0,0,0,1250000,1250000,1250000,1250000,1250000,1250000,1250000,1250000,1250000,1250000,1250000]
+},
+
+T10:{
+boost:[32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740,32894740],
+luck:[0,0,0,0,0,0,0,0,0,6250000,6250000,6250000,6250000,6250000,6250000,6250000,6250000,6250000,6250000,6250000]
+}
+
+};
+const buoiColors = [
+  {name:"Xanh Dương", class:"xanh-duong"}, {name:"Đỏ", class:"do"},
+  {name:"Xanh Ngọc", class:"xanh-ngoc"}, {name:"Tím", class:"tim"},
+  {name:"Vàng", class:"vang"}, {name:"Xanh Lá", class:"xanh-la"}
+];
+
+const tContainer = document.getElementById("tContainer");
+for (let t in GemData) {
+  const tCard = document.createElement("div");
+  tCard.className = "t-card";
+  tCard.innerHTML = `<h3>${t}</h3>`;
+ buoiColors.forEach((b)=>{
+  tCard.innerHTML += `
+    <div class="buoi ${b.class}">
+      <span>${b.name}</span>
+
+      <input
+        type="number"
+        class="lvl"
+        data-t="${t}"
+        min="0"
+        max="20"
+        value="0">
+    </div>`;
+});
+  tContainer.appendChild(tCard);
+}
+
+function tinhToan(){
+  const as = parseInt(document.getElementById("thuocThu").value) || 0;
+  const tc = parseInt(document.getElementById("thuocTangCuong").value) || 0;
+  const mm = parseInt(document.getElementById("thuocMayMan").value) || 0;
+  
+  const b_thuoc = (parseInt(document.getElementById("bonus_thuoc").value) || 0) / 100;
+  const b_kc = (parseInt(document.getElementById("bonus_kc").value) || 0) / 100;
+  const b_cgd =
+(
+    (parseInt(document.getElementById("cgd1").value) || 0) +
+    (parseInt(document.getElementById("cgd2").value) || 0)
+) / 100;
+
+  let totalTC = 0;
+let totalMM = 0;
+
+document.querySelectorAll(".lvl").forEach(input => {
+
+    const t = input.dataset.t;
+
+    const lvl = parseInt(input.value) || 0;
+
+    for(let i = 0; i < lvl; i++){
+
+        totalTC += GemData[t].boost[i];
+        totalMM += GemData[t].luck[i];
+
+    }
+
+});
+
+  const diemAS = (as * 70) * (1 + b_thuoc);
+  const diemTC_MM = ((totalTC * 0.56) + (totalMM * 5.6)) * (1 + b_kc);
+  const tongDiem = Math.round((diemAS + diemTC_MM) * (1 + b_cgd));
+  const duTC = tc - totalTC;
+const duMM = mm - totalMM;
+
+  document.getElementById("summary").style.display = "block";
+  document.getElementById("summaryDetail").innerHTML = `
+Tổng điểm: <b>${tongDiem.toLocaleString()}</b><br><br>
+
+Thuốc tăng cường đã dùng:
+<b>${totalTC.toLocaleString()}</b><br>
+
+Thuốc may mắn đã dùng:
+<b>${totalMM.toLocaleString()}</b><br><br>
+
+Thuốc tăng cường còn lại:
+<b style="color:${duTC >= 0 ? 'green':'red'}">
+${duTC.toLocaleString()}
+</b><br>
+
+Thuốc may mắn còn lại:
+<b style="color:${duMM >= 0 ? 'green':'red'}">
+${duMM.toLocaleString()}
+</b>
+`;
+}
+</script>
