@@ -1,1 +1,425 @@
 
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f1f5f9;
+    padding:20px;
+}
+
+.main-card{
+    max-width:900px;
+    margin:auto;
+    background:#fff;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid #dbe3ee;
+    box-shadow:0 4px 15px rgba(0,0,0,.08);
+}
+
+.header{
+    background:#2563eb;
+    color:white;
+    padding:18px;
+    font-size:24px;
+    font-weight:700;
+}
+
+.content{
+    padding:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group label{
+    font-size:14px;
+    margin-bottom:6px;
+    font-weight:600;
+    color:#334155;
+}
+
+.form-group input,
+.form-group select{
+    height:42px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    padding:0 12px;
+    font-size:14px;
+}
+
+.form-group input:focus,
+.form-group select:focus{
+    outline:none;
+    border-color:#2563eb;
+}
+
+.total-buff{
+    margin-top:12px;
+    font-size:13px;
+    font-weight:700;
+    color:#2563eb;
+}
+
+.btn-wrap{
+    margin-top:18px;
+}
+
+.btn{
+    width:100%;
+    height:46px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+.result{
+    margin-top:20px;
+    border-top:1px solid #e2e8f0;
+    padding-top:20px;
+}
+
+.result-title{
+    font-size:18px;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.result-row{
+    display:flex;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid #f1f5f9;
+}
+
+.result-row span:first-child{
+    color:#475569;
+}
+
+.result-row span:last-child{
+    font-weight:700;
+}
+
+@media(max-width:768px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+
+
+<div class="main-card">
+
+    <div class="header">
+        Thú Triệu Hồi
+    </div>
+
+    <div class="content">
+
+        <div class="grid">
+
+            <div class="form-group">
+                <label>Thú</label>
+                <select id="pet">
+                    <option value="T1">T1 - Cây</option>
+                    <option value="T2">T2 - Cá mập</option>
+                    <option value="T3">T3 - Ngựa</option>
+                    <option value="T4">T4 - Phượng</option>
+                    <option value="T5">T5 - Kiếm</option>
+                    <option value="T6">T6 - Khủng long</option>
+                    <option value="T7">T7 - Xe bí</option>
+                    <option value="T8">T8 - Rồng</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Lv hiện tại</label>
+                <input type="number" id="startLevel" value="1" min="1" max="20">
+            </div>
+
+            <div class="form-group">
+                <label>Bùa tím</label>
+                <input class="number-input" id="advanced" type="text">
+            </div>
+
+            <div class="form-group">
+                <label>Bùa vàng</label>
+                <input class="number-input" id="perfect" type="text">
+            </div>
+
+            <div class="form-group">
+                <label>Chuyên gia đối đầu 1 (%)</label>
+                <input id="buff1" type="number" value="0">
+            </div>
+
+            <div class="form-group">
+                <label>Chuyên gia đối đầu 2 (%)</label>
+                <input id="buff2" type="number" value="0">
+            </div>
+
+            <div class="form-group">
+                <label>Đối đầu - Trận triệu hồi (%)</label>
+                <input id="buff3" type="number" value="0">
+            </div>
+
+        </div>
+
+        <div class="total-buff">
+            Tổng % tăng thêm: <span id="totalBuff">0%</span>
+        </div>
+
+        <div class="btn-wrap">
+            <button class="btn" onclick="calculate()">
+                TÍNH
+            </button>
+        </div>
+
+        <div class="result">
+
+            <div class="result-title">
+                Kết quả
+            </div>
+
+            <div class="result-row">
+                <span>Lv đạt được</span>
+                <span id="rLv">-</span>
+            </div>
+
+            <div class="result-row">
+                <span>Bùa tím đã dùng</span>
+                <span id="rAdvUsed">-</span>
+            </div>
+
+            <div class="result-row">
+                <span>Bùa vàng đã dùng</span>
+                <span id="rPerUsed">-</span>
+            </div>
+
+            <div class="result-row">
+                <span>Bùa tím còn dư</span>
+                <span id="rAdvLeft">-</span>
+            </div>
+
+            <div class="result-row">
+                <span>Bùa vàng còn dư</span>
+                <span id="rPerLeft">-</span>
+            </div>
+
+            <div class="result-row">
+                <span>TỔNG ĐIỂM</span>
+                <span id="rPoint">-</span>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+const ADV_POINT = 140/25;
+const PERFECT_POINT = 280/5;
+
+/*
+THAY DỮ LIỆU ĐẦY ĐỦ T1 → T8 TỪ ẢNH VÀO ĐÂY
+
+advanced:
+chi phí từ Lv1→2, Lv2→3 ... Lv19→20
+
+perfect:
+chi phí tương ứng
+*/
+
+const summonData = {
+
+T1:{
+advanced:[5,9,13,18,24,30,36,43,50,58,66,75,83,92,102,111,121,131,142],
+perfect:[0,0,0,0,0,0,0,0,0,8,9,10,11,12,13,14,15,17,18]
+},
+
+T2:{
+advanced:[25,45,65,90,120,150,180,215,250,290,330,375,415,460,510,555,605,655,710],
+perfect:[0,0,0,0,0,0,0,0,0,36,41,46,51,57,63,69,75,81,87]
+},
+
+T3:{
+advanced:[115,210,320,445,585,735,895,1070,1250,1445,1645,1855,2070,2295,2530,2770,3020,3275,3535],
+perfect:[0,0,0,0,0,0,0,0,0,178,202,228,255,282,311,341,371,402,435]
+},
+
+T4:{
+advanced:[560,1030,1580,2210,2910,3660,4470,5340,6250,7210,8210,9260,10350,11470,12640,13840,15080,16360,17660],
+perfect:[0,0,0,0,0,0,0,0,0,890,1010,1140,1275,1410,1555,1705,1855,2010,2175]
+},
+
+T5:{
+advanced:[2800,5130,7900,11140,14510,18290,22340,26660,31220,36020,41040,46270,51710,57350,63180,69190,75390,81760,88290],
+perfect:[0,0,0,0,0,0,0,0,0,4430,5045,5690,6360,7050,7770,8505,9270,10050,10855]
+},
+
+T6:{
+advanced:[13960,25650,39490,55190,72540,91410,111680,133260,156060,180070,205170,231340,258540,286730,315880,345950,376920,408760,441450],
+perfect:[0,0,0,0,0,0,0,0,0,22135,25220,28440,31780,35245,38830,42525,46335,50245,54265]
+},
+
+T7:{
+advanced:[69799,128229,197421,275905,362686,457037,558392,666297,780376,900312,1025831,1156695,1292695,1433642,1579370,1729726,1884572,2043781,2207237],
+perfect:[0,0,0,0,0,0,0,0,0,110666,126095,142181,158898,176223,194136,212617,231651,251221,271313]
+},
+
+T8:{
+advanced:[349000,641150,987110,1379530,1813430,2285190,2791960,3331490,3901880,4501560,5129160,5783480,6463480,7168220,7896850,
+8648630,9422860,10218910,11036185],
+perfect:[0,0,0,0,0,0,0,0,0,553335,630475,710905,794490,881115,970680,1063090,1158260,1256105,1356565]
+}
+
+};
+
+function formatNumber(num){
+    return Math.round(num).toLocaleString('en-US');
+}
+
+function getNumber(id){
+    return Number(
+        document.getElementById(id).value.replace(/,/g,'')
+    ) || 0;
+}
+
+document.querySelectorAll('.number-input').forEach(input=>{
+
+    input.addEventListener('input',function(){
+
+        let value=this.value.replace(/,/g,'');
+
+        value=value.replace(/\D/g,'');
+
+        if(value===''){
+            this.value='';
+            return;
+        }
+
+        this.value=Number(value).toLocaleString('en-US');
+
+    });
+
+});
+
+function updateBuff(){
+
+   const total =
+(+document.getElementById('buff1').value || 0) +
+(+document.getElementById('buff2').value || 0) +
+(+document.getElementById('buff3').value || 0);
+
+    document.getElementById('totalBuff').textContent =
+    total.toLocaleString() + '%';
+
+}
+
+document.getElementById('buff1').addEventListener('input', updateBuff);
+document.getElementById('buff2').addEventListener('input', updateBuff);
+document.getElementById('buff3').addEventListener('input', updateBuff);eBuff);
+
+function calculate(){
+
+    const pet=document.getElementById('pet').value;
+
+    const startLv=
+    Number(document.getElementById('startLevel').value);
+    if(startLv >= 20){
+
+    document.getElementById('rLv').textContent = '20 (MAX)';
+    document.getElementById('rAdvUsed').textContent = '0';
+    document.getElementById('rPerUsed').textContent = '0';
+    document.getElementById('rAdvLeft').textContent =
+        formatNumber(getNumber('advanced'));
+    document.getElementById('rPerLeft').textContent =
+        formatNumber(getNumber('perfect'));
+    document.getElementById('rPoint').textContent = '0';
+
+    return;
+}
+
+    let adv=getNumber('advanced');
+    let per=getNumber('perfect');
+
+    const data=summonData[pet];
+
+    let currentLv=startLv;
+
+    let usedAdv=0;
+    let usedPer=0;
+
+    for(let i=startLv-1;i<19;i++){
+
+        const needAdv=data.advanced[i];
+        const needPer=data.perfect[i];
+
+        if(
+            adv>=needAdv &&
+            per>=needPer
+        ){
+
+            adv-=needAdv;
+            per-=needPer;
+
+            usedAdv+=needAdv;
+            usedPer+=needPer;
+
+            currentLv++;
+
+        }else{
+            break;
+        }
+
+    }
+
+    const totalBuff=
+    (+buff1.value||0)+
+    (+buff2.value||0)+
+    (+buff3.value||0);
+
+    const point=
+    (
+        usedAdv*ADV_POINT +
+        usedPer*PERFECT_POINT
+    )
+    *
+    (1+totalBuff/100);
+
+   document.getElementById('rLv').textContent = currentLv;
+    document.getElementById('rAdvUsed').textContent = formatNumber(usedAdv);
+    document.getElementById('rPerUsed').textContent = formatNumber(usedPer);
+    document.getElementById('rAdvLeft').textContent = formatNumber(adv);
+    document.getElementById('rPerLeft').textContent = formatNumber(per);
+    document.getElementById('rPoint').textContent = formatNumber(point);
+
+}
+
+updateBuff();
+
+</script>
+
+
