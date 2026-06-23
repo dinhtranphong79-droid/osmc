@@ -242,15 +242,6 @@ body{
 const ADV_POINT = 140/25;
 const PERFECT_POINT = 280/5;
 
-/*
-THAY DỮ LIỆU ĐẦY ĐỦ T1 → T8 TỪ ẢNH VÀO ĐÂY
-
-advanced:
-chi phí từ Lv1→2, Lv2→3 ... Lv19→20
-
-perfect:
-chi phí tương ứng
-*/
 
 const summonData = {
 
@@ -340,7 +331,7 @@ function updateBuff(){
 
 document.getElementById('buff1').addEventListener('input', updateBuff);
 document.getElementById('buff2').addEventListener('input', updateBuff);
-document.getElementById('buff3').addEventListener('input', updateBuff);eBuff);
+document.getElementById('buff3').addEventListener('input', updateBuff);
 
 function calculate(){
 
@@ -396,10 +387,10 @@ function calculate(){
 
     }
 
-    const totalBuff=
-    (+buff1.value||0)+
-    (+buff2.value||0)+
-    (+buff3.value||0);
+   const totalBuff =
+(+document.getElementById('buff1').value || 0) +
+(+document.getElementById('buff2').value || 0) +
+(+document.getElementById('buff3').value || 0);
 
     const point=
     (
