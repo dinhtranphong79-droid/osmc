@@ -34,7 +34,11 @@
     margin-top:6px;
     text-align:left;
 }
-  body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+ .tab-content-phuthuy{
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    padding: 20px;
+}
   h1 { text-align: center; color: #1e40af; }
   
   /* Khung nhập liệu chung */
@@ -62,10 +66,8 @@
   button { display: block; width: 100%; max-width: 300px; margin: 20px auto; padding: 12px; border: none; border-radius: 5px; background: #1e40af; color: #fff; cursor: pointer; font-size: 16px; font-weight: bold; }
   .summary { margin: 20px auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); max-width: 600px; }
 </style>
-</head>
-<body>
 
-<h1></h1>
+<h1>Phù thủy</h1>
 
 <div class="control-box">
 
@@ -109,18 +111,18 @@
     </label>
 
     <div class="total-bonus" id="displayThuocBonus">
-        % tăng thêm - Thuốc ánh sáng: 0%
+       Tổng % tăng thêm - Thuốc ánh sáng: 0%
     </div>
 
     <div class="total-bonus" id="displayNgocBonus">
-        % tăng thêm - Ngọc: 0%
+       Tổng % tăng thêm - Ngọc: 0%
     </div>
 
 </div>
 
 <div class="container" id="tContainer"></div>
 
-<button onclick="tinhToan()">Tính & Gợi ý nâng</button>
+<button onclick="tinhToanPhuThuy()">Tính & Gợi ý nâng</button>
 
 <div class="summary" id="summary" style="display:none;">
   <h2>Bảng tổng kết</h2>
@@ -141,17 +143,23 @@ function updateBonusDisplay(){
         (parseFloat(document.getElementById('cgd2').value) || 0);
 
     document.getElementById('displayThuocBonus').innerText =
-        "% tăng thêm - Thuốc ánh sáng: " + thuoc + "%";
+    "Tổng % tăng thêm - Thuốc ánh sáng: " + thuoc + "%";
 
-    document.getElementById('displayNgocBonus').innerText =
-        "% tăng thêm - Ngọc: " + ngoc + "%";
+document.getElementById('displayNgocBonus').innerText =
+    "Tổng % tăng thêm - Ngọc: " + ngoc + "%";
 }
 
-document.querySelectorAll('.bonus').forEach(el=>{
-    el.addEventListener('input', updateBonusDisplay);
-});
+function initPhuThuy(){
 
-updateBonusDisplay();
+    document.querySelectorAll('.bonus').forEach(el=>{
+
+        el.removeEventListener('input', updateBonusDisplay);
+        el.addEventListener('input', updateBonusDisplay);
+
+    });
+
+    updateBonusDisplay();
+}
 
 const GemData = {
 
@@ -212,29 +220,39 @@ const buoiColors = [
   {name:"Vàng", class:"vang"}, {name:"Xanh Lá", class:"xanh-la"}
 ];
 
-const tContainer = document.getElementById("tContainer");
-for (let t in GemData) {
-  const tCard = document.createElement("div");
-  tCard.className = "t-card";
-  tCard.innerHTML = `<h3>${t}</h3>`;
- buoiColors.forEach((b)=>{
-  tCard.innerHTML += `
-    <div class="buoi ${b.class}">
-      <span>${b.name}</span>
+function buildPhuThuy(){
 
-      <input
-        type="number"
-        class="lvl"
-        data-t="${t}"
-        min="0"
-        max="20"
-        value="0">
-    </div>`;
-});
-  tContainer.appendChild(tCard);
+    const tContainer = document.getElementById("tContainer");
+
+    if(!tContainer) return;
+
+    tContainer.innerHTML = "";
+
+    for (let t in GemData) {
+
+        const tCard = document.createElement("div");
+        tCard.className = "t-card";
+        tCard.innerHTML = `<h3>${t}</h3>`;
+
+        buoiColors.forEach((b)=>{
+            tCard.innerHTML += `
+            <div class="buoi ${b.class}">
+                <span>${b.name}</span>
+                <input
+                    type="number"
+                    class="lvl"
+                    data-t="${t}"
+                    min="0"
+                    max="20"
+                    value="0">
+            </div>`;
+        });
+
+        tContainer.appendChild(tCard);
+    }
 }
 
-function tinhToan(){
+function tinhToanPhuThuy(){
   const as = parseInt(document.getElementById("thuocThu").value) || 0;
   const tc = parseInt(document.getElementById("thuocTangCuong").value) || 0;
   const mm = parseInt(document.getElementById("thuocMayMan").value) || 0;
@@ -292,4 +310,6 @@ ${duMM.toLocaleString()}
 </b>
 `;
 }
+buildPhuThuy();
+initPhuThuy();
 </script>
