@@ -265,11 +265,8 @@ for(let i=1; i<=15; i++) {
         let maxMau = parseInt(document.getElementById('resMau').value) || 0;
 
         // Công thức mới: Buff / 100
-      const buffBua =
-    Math.max(
-        1,
-        (parseFloat(document.getElementById('sumBua').innerText) || 0) / 100
-    );
+     const buffBua = 1 + (parseFloat(document.getElementById('sumBua').innerText) || 0) / 100;
+const buffTb = 1 + (parseFloat(document.getElementById('sumTrangbi').innerText) || 0) / 100;
 
 const buffTb =
     Math.max(
