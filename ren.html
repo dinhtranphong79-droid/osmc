@@ -301,10 +301,10 @@
             }
         });
 
-        // Tùy chỉnh hệ số tại đây để khớp con số 30.100.000
+        // tính điểm
         let pBua = totalBuaOwned * 100 * buffBua;
-        let pMau = (usedMau / 25) * 280 * buffTb;
-        let pBinh = (usedBinh / 125) * 140 * buffTb;
+        let pMau = usedMau * 11.2 * buffTb;
+        let pBinh = usedBinh * 1.12 * buffTb;
 
         resHtml += `</ul><div class='mt-4 p-4 bg-blue-600 text-white rounded-lg font-bold'>
             <p>TỔNG ĐIỂM: ${Math.round(pBua + pMau + pBinh).toLocaleString()}</p>
