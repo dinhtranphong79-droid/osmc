@@ -243,6 +243,21 @@
         'T9': [[0,0],[170614,0],[289032,0],[420902,0],[561484,0],[711661,0],[886169,0],[1034412,0],[1205568,0],[1382536,0],[1564901,198753],[1752314,222555],[1944477,246961],[2141129,271937],[2347024,297455],[2547020,323488],[2755878,350015],[2968456,377013],[3184609,404446],[3404203,432356]]
     };
 
+window.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('equipmentSlots');
+        if (!container) return;
+
+        container.innerHTML = '';
+        for(let i=1; i<=15; i++) {
+            container.innerHTML += `
+            <div class="equip-item">
+                <span class="font-bold text-xs">T${i}</span>
+                <select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select>
+                <input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19">
+            </div>`;
+        }
+    });
+    
     const container = document.getElementById('equipmentSlots');
 
 container.innerHTML = '';
