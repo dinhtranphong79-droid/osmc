@@ -243,30 +243,19 @@
         'T9': [[0,0],[170614,0],[289032,0],[420902,0],[561484,0],[711661,0],[886169,0],[1034412,0],[1205568,0],[1382536,0],[1564901,198753],[1752314,222555],[1944477,246961],[2141129,271937],[2347024,297455],[2547020,323488],[2755878,350015],[2968456,377013],[3184609,404446],[3404203,432356]]
     };
 
-window.addEventListener('DOMContentLoaded', () => {
-        const container = document.getElementById('equipmentSlots');
-        if (!container) return;
-
-        container.innerHTML = '';
-        for(let i=1; i<=15; i++) {
-            container.innerHTML += `
-            <div class="equip-item">
-                <span class="font-bold text-xs">T${i}</span>
-                <select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select>
-                <input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19">
-            </div>`;
-        }
-    });
-    
+    // 1. Khởi tạo danh sách trang bị duy nhất
     const container = document.getElementById('equipmentSlots');
-
-container.innerHTML = '';
-
-for(let i=1; i<=15; i++) {
-       container.innerHTML += `
-<div class="equip-item"><span class="font-bold text-xs">Trang bị số ${i}</span><select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select><input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19"></div>`;
+    container.innerHTML = '';
+    for(let i=1; i<=15; i++) {
+        container.innerHTML += `
+        <div class="equip-item">
+            <span class="font-bold text-xs">Trang bị ${i}</span>
+            <select class="tVal text-xs p-1"><option>T9</option><option>T8</option><option>T7</option><option>T6</option><option>T5</option></select>
+            <input type="number" class="lVal w-12 p-1 text-xs text-center border" value="1" min="1" max="19">
+        </div>`;
     }
 
+    // 2. Sự kiện cập nhật hiển thị %
     document.querySelectorAll('.pct-input').forEach(i => i.addEventListener('input', updatePct));
     function updatePct() {
         const cg1 = parseFloat(document.getElementById('cg1').value)||0, cg2 = parseFloat(document.getElementById('cg2').value)||0, tr = parseFloat(document.getElementById('tr').value)||0, tb = parseFloat(document.getElementById('tb').value)||0;
@@ -274,20 +263,15 @@ for(let i=1; i<=15; i++) {
         document.getElementById('sumTrangbi').innerText = (cg1 + cg2 + tb) + "%";
     }
 
+    // 3. Hàm tính toán logic
     window.optimizeRen = function() {
         let totalBuaOwned = parseInt(document.getElementById('resBua').value) || 0;
         let maxBinh = parseInt(document.getElementById('resBinh').value) || 0;
         let maxMau = parseInt(document.getElementById('resMau').value) || 0;
 
-        // Công thức mới: Buff / 100
-     const buffBua = 1 + (parseFloat(document.getElementById('sumBua').innerText) || 0) / 100;
-const buffTb = 1 + (parseFloat(document.getElementById('sumTrangbi').innerText) || 0) / 100;
+        const buffBua = 1 + (parseFloat(document.getElementById('sumBua').innerText) || 0) / 100;
+        const buffTb = 1 + (parseFloat(document.getElementById('sumTrangbi').innerText) || 0) / 100;
 
-const buffTb =
-    Math.max(
-        1,
-        (parseFloat(document.getElementById('sumTrangbi').innerText) || 0) / 100
-    );
         let items = [];
         document.querySelectorAll('#equipmentSlots > div').forEach((div, idx) => {
             items.push({ t: div.querySelector('.tVal').value, lvl: parseInt(div.querySelector('.lVal').value), id: idx + 1 });
@@ -295,63 +279,36 @@ const buffTb =
 
         items.sort((a, b) => (b.t.localeCompare(a.t)) || (b.lvl - a.lvl));
 
-      let usedBinh = 0,
-    usedMau = 0;
+        let usedBinh = 0, usedMau = 0, step = 1;
+        let resHtml = "<h3 class='font-bold mb-2'>Các bước nâng cấp:</h3><ul class='text-sm space-y-1'>";
 
-let step = 1;
+        items.forEach(item => {
+            let startLvl = item.lvl;
+            let upgraded = false;
+            while (item.lvl < 20) {
+                let costs = table[item.t][item.lvl];
+                if (maxBinh >= costs[0] && maxMau >= costs[1]) {
+                    maxBinh -= costs[0];
+                    maxMau -= costs[1];
+                    usedBinh += costs[0];
+                    usedMau += costs[1];
+                    item.lvl++;
+                    upgraded = true;
+                } else { break; }
+            }
+            if(upgraded){
+                resHtml += `<li><b>B${step++}</b>: Trang bị ${item.id} (${item.t}) Lv${startLvl} → Lv${item.lvl}</li>`;
+            }
+        });
 
-let resHtml =
-"<h3 class='font-bold mb-2'>Các bước nâng cấp:</h3><ul class='text-sm space-y-1'>";
-
-items.forEach(item => {
-
-    let startLvl = item.lvl;
-    let upgraded = false;
-
-    while (item.lvl < 20) {
-
-        let costs = table[item.t][item.lvl];
-
-        if (maxBinh >= costs[0] && maxMau >= costs[1]) {
-
-            maxBinh -= costs[0];
-            maxMau -= costs[1];
-
-            usedBinh += costs[0];
-            usedMau += costs[1];
-
-            item.lvl++;
-            upgraded = true;
-
-        } else {
-            break;
-        }
-    }
-
-    if(upgraded){
-      resHtml += `
-<li>
-    <b>B${step}</b>:
-    Trang bị ${item.id} (${item.t})
-    <span style="color:#2563eb;font-weight:bold">
-        Lv${startLvl} → Lv${item.lvl}
-    </span>
-</li>`;
-        step++;
-    }
-
-});
-
+        // Tùy chỉnh hệ số tại đây để khớp con số 30.100.000
         let pBua = totalBuaOwned * 100 * buffBua;
         let pMau = (usedMau / 25) * 280 * buffTb;
         let pBinh = (usedBinh / 125) * 140 * buffTb;
 
         resHtml += `</ul><div class='mt-4 p-4 bg-blue-600 text-white rounded-lg font-bold'>
-            <p>Điểm búa rèn: ${Math.round(pBua).toLocaleString()}</p>
-            <p>Điểm trang bị: ${Math.round(pMau + pBinh).toLocaleString()}</p>
-            <p class='text-lg border-t mt-2 pt-2'>TỔNG ĐIỂM: ${Math.round(pBua + pMau + pBinh).toLocaleString()}</p>
+            <p>TỔNG ĐIỂM: ${Math.round(pBua + pMau + pBinh).toLocaleString()}</p>
         </div>`;
-            
         document.getElementById('result').innerHTML = resHtml;
         document.getElementById('result').classList.remove('hidden');
     };
