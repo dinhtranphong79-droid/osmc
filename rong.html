@@ -1,1 +1,408 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hệ Thống Nối Cấp Trang Bị</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --radius: 12px;
+    
+    /* Màu đặc trưng theo loại */
+    --color-green: #16a34a;
+    --color-blue: #0284c7;
+    --color-purple: #9333ea;
+    --color-gold: #ca8a04;
+  }
 
+  * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 1050px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+  }
+
+  h1 {
+    margin: 0 0 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 14px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .card h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .input-group {
+    display: grid;
+    gap: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  button.btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+
+  button.btn:hover { background: var(--accent-hover); }
+
+  button.secondary {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 11px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  button.secondary:hover {
+    background: #e2e8f0;
+    color: var(--text);
+  }
+
+  .result {
+    margin-top: 24px;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result h3 {
+    font-size: 16px;
+    margin: 0 0 12px;
+    color: #0f172a;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .summary { grid-template-columns: 1fr; }
+  }
+
+  .box {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+
+  .box-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 9px 8px;
+    text-align: left;
+    font-size: 13.5px;
+  }
+
+  th {
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td.right { text-align: right; }
+  
+  /* Màu sắc nhận diện từng loại */
+  .badge-phao { font-weight: 700; color: #475569; }
+  .badge-green { font-weight: 700; color: var(--color-green); }
+  .badge-blue { font-weight: 700; color: var(--color-blue); }
+  .badge-purple { font-weight: 700; color: var(--color-purple); }
+  .badge-gold { font-weight: 700; color: var(--color-gold); }
+
+  .highlight-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent) !important;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>⚔️ Công Cụ Tính Nối Cấp Trang Bị</h1>
+
+    <div class="grid">
+      <!-- Cột nhập đá -->
+      <div class="card">
+        <h3>💎 Nhập số lượng đá hiện tại</h3>
+        <div class="input-group">
+          <div class="input-row"><label>Đá Xanh lá (250 đá/lv - 70 điểm)</label><input id="haveGreen" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Đá Xanh dương (125 đá/lv - 700 điểm)</label><input id="haveBlue" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Đá Tím (66 đá/lv - 7,000 điểm)</label><input id="havePurple" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Đá Vàng (500 đá/lv - 14,000 điểm)</label><input id="haveGold" type="number" min="0" value="0"></div>
+        </div>
+      </div>
+
+      <!-- Cột nhập Level -->
+      <div class="card">
+        <h3>📈 Nhập Level hiện tại</h3>
+        <div class="input-group">
+          <div class="input-row"><label>Level Pháo</label><input id="lvlPhao" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Level Xanh lá</label><input id="lvlGreen" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Level Xanh dương</label><input id="lvlBlue" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Level Tím</label><input id="lvlPurple" type="number" min="0" value="0"></div>
+          <div class="input-row"><label>Level Vàng</label><input id="lvlGold" type="number" min="0" value="0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="compute" class="btn">✨ Tính Toán Tối Ưu</button>
+      <button id="reset" class="secondary">🔄 Đặt Lại</button>
+    </div>
+
+    <!-- Vùng kết quả -->
+    <div id="resultArea" class="result" style="display:none">
+      <h3>📊 Bảng Kết Quả Chi Tiết</h3>
+
+      <div class="summary">
+        <div class="box">
+          <div class="box-title">Cấp Độ & Tiến Trình</div>
+          <table>
+            <tr><th>Loại</th><th class="right">Hiện tại</th><th class="right">Tối đa</th><th class="right">Sau nâng</th></tr>
+            <tr><td class="badge-phao">Pháo</td><td class="right" id="curPhao"></td><td class="right" id="maxPhao"></td><td class="right" id="endPhao"></td></tr>
+            <tr><td class="badge-green">Xanh lá</td><td class="right" id="curGreen"></td><td class="right" id="maxGreen"></td><td class="right" id="endGreen"></td></tr>
+            <tr><td class="badge-blue">Xanh dương</td><td class="right" id="curBlue"></td><td class="right" id="maxBlue"></td><td class="right" id="endBlue"></td></tr>
+            <tr><td class="badge-purple">Tím</td><td class="right" id="curPurple"></td><td class="right" id="maxPurple"></td><td class="right" id="endPurple"></td></tr>
+            <tr><td class="badge-gold">Vàng</td><td class="right" id="curGold"></td><td class="right" id="maxGold"></td><td class="right" id="endGold"></td></tr>
+          </table>
+        </div>
+
+        <div class="box">
+          <div class="box-title">Tài Nguyên & Điểm Số</div>
+          <table>
+            <tr><th>Loại đá</th><th class="right">Đã dùng</th><th class="right">Còn thiếu</th><th class="right">Điểm</th></tr>
+            <tr><td class="badge-green">Xanh lá</td><td class="right" id="usedGreen"></td><td class="right" id="lackGreen"></td><td class="right" id="ptsGreen"></td></tr>
+            <tr><td class="badge-blue">Xanh dương</td><td class="right" id="usedBlue"></td><td class="right" id="lackBlue"></td><td class="right" id="ptsBlue"></td></tr>
+            <tr><td class="badge-purple">Tím</td><td class="right" id="usedPurple"></td><td class="right" id="lackPurple"></td><td class="right" id="ptsPurple"></td></tr>
+            <tr><td class="badge-gold">Vàng</td><td class="right" id="usedGold"></td><td class="right" id="lackGold"></td><td class="right" id="ptsGold"></td></tr>
+            <tr><td><b>Tổng điểm</b></td><td colspan="3" class="right highlight-total" id="ptsTotal"></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const COST_GREEN  = 250;
+  const COST_BLUE   = 125;
+  const COST_PURPLE = 66;
+  const COST_GOLD   = 500;
+
+  const PT_GREEN  = 70;
+  const PT_BLUE   = 700;
+  const PT_PURPLE = 7000;
+  const PT_GOLD   = 14000;
+
+  const el = id => document.getElementById(id);
+  const parse = inp => Math.max(0, Number(inp.value)||0);
+  const fmt = n => Number(n).toLocaleString("vi-VN");
+
+  function compute(){
+    let curPhao = parse(el("lvlPhao"));
+    let curGreen = parse(el("lvlGreen"));
+    let curBlue = parse(el("lvlBlue"));
+    let curPurple = parse(el("lvlPurple"));
+    let curGold = parse(el("lvlGold"));
+
+    let haveGreen = parse(el("haveGreen"));
+    let haveBlue = parse(el("haveBlue"));
+    let havePurple = parse(el("havePurple"));
+    let haveGold = parse(el("haveGold"));
+
+    // Logic tính Max & Level sau nâng chuẩn
+    let maxPhao = curPhao;
+    let maxGreen = maxPhao;
+    let maxBlue = Math.floor(maxGreen / 5);
+    let maxPurple = Math.floor(maxBlue / 4);
+    let maxGold = Math.floor(maxPurple / 5);
+
+    let needMaxGreen = Math.max(0, (maxGreen - curGreen) * COST_GREEN);
+    let needMaxBlue = Math.max(0, (maxBlue - curBlue) * COST_BLUE);
+    let needMaxPurple = Math.max(0, (maxPurple - curPurple) * COST_PURPLE);
+    let needMaxGold = Math.max(0, (maxGold - curGold) * COST_GOLD);
+
+    let endGreen = Math.min(maxPhao, curGreen + Math.floor(haveGreen / COST_GREEN));
+    let endBlue = Math.min(Math.floor(endGreen / 5), curBlue + Math.floor(haveBlue / COST_BLUE));
+    let endPurple = Math.min(Math.floor(endBlue / 4), curPurple + Math.floor(havePurple / COST_PURPLE));
+    let endGold = Math.min(Math.floor(endPurple / 5), curGold + Math.floor(haveGold / COST_GOLD));
+
+    let usedGreen = (endGreen - curGreen) * COST_GREEN;
+    let usedBlue = (endBlue - curBlue) * COST_BLUE;
+    let usedPurple = (endPurple - curPurple) * COST_PURPLE;
+    let usedGold = (endGold - curGold) * COST_GOLD;
+
+    let lackGreen = Math.max(0, needMaxGreen - usedGreen);
+    let lackBlue = Math.max(0, needMaxBlue - usedBlue);
+    let lackPurple = Math.max(0, needMaxPurple - usedPurple);
+    let lackGold = Math.max(0, needMaxGold - usedGold);
+
+    let ptsGreen = usedGreen * PT_GREEN;
+    let ptsBlue = usedBlue * PT_BLUE;
+    let ptsPurple = usedPurple * PT_PURPLE;
+    let ptsGold = usedGold * PT_GOLD;
+    let ptsTotal = ptsGreen + ptsBlue + ptsPurple + ptsGold;
+
+    el("resultArea").style.display = "block";
+
+    el("curPhao").textContent = fmt(curPhao);
+    el("maxPhao").textContent = fmt(maxPhao);
+    el("endPhao").textContent = fmt(maxPhao);
+
+    el("curGreen").textContent = fmt(curGreen);
+    el("maxGreen").textContent = fmt(maxGreen);
+    el("endGreen").textContent = fmt(endGreen);
+
+    el("curBlue").textContent = fmt(curBlue);
+    el("maxBlue").textContent = fmt(maxBlue);
+    el("endBlue").textContent = fmt(endBlue);
+
+    el("curPurple").textContent = fmt(curPurple);
+    el("maxPurple").textContent = fmt(maxPurple);
+    el("endPurple").textContent = fmt(endPurple);
+
+    el("curGold").textContent = fmt(curGold);
+    el("maxGold").textContent = fmt(maxGold);
+    el("endGold").textContent = fmt(endGold);
+
+    el("usedGreen").textContent = fmt(usedGreen);
+    el("lackGreen").textContent = fmt(lackGreen);
+    el("ptsGreen").textContent = fmt(ptsGreen);
+
+    el("usedBlue").textContent = fmt(usedBlue);
+    el("lackBlue").textContent = fmt(lastBlue = lackBlue);
+    el("ptsBlue").textContent = fmt(ptsBlue);
+
+    el("usedPurple").textContent = fmt(usedPurple);
+    el("lackPurple").textContent = fmt(lackPurple);
+    el("ptsPurple").textContent = fmt(ptsPurple);
+
+    el("usedGold").textContent = fmt(usedGold);
+    el("lackGold").textContent = fmt(lackGold);
+    el("ptsGold").textContent = fmt(ptsGold);
+
+    el("ptsTotal").textContent = fmt(ptsTotal) + " 🌟";
+  }
+
+  el("compute").onclick = compute;
+
+  el("reset").onclick = function(){
+    ["haveGreen","haveBlue","havePurple","haveGold","lvlPhao","lvlGreen","lvlBlue","lvlPurple","lvlGold"]
+      .forEach(id => el(id).value = 0);
+    el("resultArea").style.display = "none";
+  };
+})();
+</script>
+</body>
+</html>
