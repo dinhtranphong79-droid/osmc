@@ -24,6 +24,7 @@
 
 <div class="cannon-container">
     <div class="input-group"><label>Đá</label><input type="number" id="stone" class="cannon-input" value="0"></div>
+    <div class="input-group"><label>Đá cần cho 1 cấp</label><input type="number" id="stonePerLevel" class="cannon-input" value="1260" min="1"></div>
     <div class="input-group"><label>Gỗ</label><input type="number" id="wood" class="cannon-input" value="0"></div>
     <div class="input-group"><label>Quặng</label><input type="number" id="ore" class="cannon-input" value="0"></div>
     <div class="input-group"><label>Hộp pháo</label><input type="number" id="boxes" class="cannon-input" value="0"></div>
@@ -52,81 +53,221 @@
         const START_SEASON = 25;
 
         function getVal(id) {
-            let element = document.getElementById(id);
+            const element = document.getElementById(id);
             if (!element) return 0;
-            let v = parseInt(element.value);
+
+            const v = parseInt(element.value, 10);
             return isNaN(v) || v < 0 ? 0 : v;
         }
 
         function calculateGameSeason(now) {
             const diffInMs = now - START_DATE;
             if (diffInMs < 0) return "Trước mùa 25";
+
             const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
             const seasonOffset = Math.floor(diffInDays / 28);
             const currentSeason = START_SEASON + seasonOffset;
             const remainingDays = diffInDays % 28;
             const currentWeek = Math.floor(remainingDays / 7) + 1;
+
             return `Mùa ${currentSeason} - Tuần ${currentWeek}`;
         }
 
-        function simulateOptimal(S, W, Q, B, lv) {
-            if (lv <= 0) return { ok: true, log: [], rem: { s: S, w: W, q: Q } };
-            let stone = S, wood = W, ore = Q, box = B, log = [];
-            const nS = 1260 * lv, nW = 340 * lv, nQ = 130 * lv;
+        // stonePerLevel: số đá người dùng tự nhập cho 1 cấp
+        function simulateOptimal(S, W, Q, B, lv, stonePerLevel) {
+            if (lv <= 0) {
+                return {
+                    ok: true,
+                    log: [],
+                    rem: { s: S, w: W, q: Q }
+                };
+            }
 
+            let stone = S;
+            let wood = W;
+            let ore = Q;
+            let box = B;
+            let log = [];
+
+            const nS = stonePerLevel * lv;
+            const nW = 340 * lv;
+            const nQ = 130 * lv;
+
+            // Ưu tiên dùng hộp cho quặng
             let bQ = Math.min(box, Math.max(0, nQ - ore));
-            if (bQ > 0) { ore += bQ; box -= bQ; log.push(`Dùng ${bQ} hộp → +${bQ} quặng`); }
-            
-            let bW = Math.min(box, Math.ceil(Math.max(0, nW - wood) / 4));
-            if (bW > 0) { wood += bW * 4; box -= bW; log.push(`Dùng ${bW} hộp → +${bW*4} gỗ`); }
-            
-            if (box > 0) { stone += box * 20; log.push(`Dùng ${box} hộp → +${box*20} đá`); box = 0; }
+            if (bQ > 0) {
+                ore += bQ;
+                box -= bQ;
+                log.push(`Dùng ${bQ} hộp → +${bQ} quặng`);
+            }
 
+            // Sau đó dùng hộp cho gỗ
+            let bW = Math.min(
+                box,
+                Math.ceil(Math.max(0, nW - wood) / 4)
+            );
+
+            if (bW > 0) {
+                wood += bW * 4;
+                box -= bW;
+                log.push(`Dùng ${bW} hộp → +${bW * 4} gỗ`);
+            }
+
+            // Hộp còn lại đổi thành đá
+            if (box > 0) {
+                stone += box * 20;
+                log.push(`Dùng ${box} hộp → +${box * 20} đá`);
+                box = 0;
+            }
+
+            // Đổi đá → gỗ → quặng
             while (true) {
                 let changed = false;
+
                 let mQ = Math.max(0, nQ - ore);
                 let mW = Math.max(0, nW - wood);
-                let sToW = Math.min(Math.floor(stone / 5), mW + mQ * 4);
-                if (sToW > 0) { stone -= sToW * 5; wood += sToW; log.push(`Đổi ${sToW * 5} đá → +${sToW} gỗ`); changed = true; }
-                let wToO = Math.min(Math.floor(wood / 4), mQ);
-                if (wToO > 0) { wood -= wToO * 4; ore += wToO; log.push(`Đổi ${wToO * 4} gỗ → +${wToO} quặng`); changed = true; }
+
+                let sToW = Math.min(
+                    Math.floor(stone / 5),
+                    mW + mQ * 4
+                );
+
+                if (sToW > 0) {
+                    stone -= sToW * 5;
+                    wood += sToW;
+                    log.push(`Đổi ${sToW * 5} đá → +${sToW} gỗ`);
+                    changed = true;
+                }
+
+                let wToO = Math.min(
+                    Math.floor(wood / 4),
+                    mQ
+                );
+
+                if (wToO > 0) {
+                    wood -= wToO * 4;
+                    ore += wToO;
+                    log.push(`Đổi ${wToO * 4} gỗ → +${wToO} quặng`);
+                    changed = true;
+                }
+
                 if (!changed) break;
             }
 
-            if (stone < nS || wood < nW || ore < nQ) return { ok: false };
-            return { ok: true, log: log, rem: { s: stone - nS, w: wood - nW, q: ore - nQ } };
+            if (stone < nS || wood < nW || ore < nQ) {
+                return { ok: false };
+            }
+
+            return {
+                ok: true,
+                log: log,
+                rem: {
+                    s: stone - nS,
+                    w: wood - nW,
+                    q: ore - nQ
+                }
+            };
         }
 
         function computeCannon() {
-            const S = getVal('stone'), W = getVal('wood'), Q = getVal('ore'), B = getVal('boxes');
-            const targetInput = document.getElementById('targetLevel').value;
+            const S = getVal('stone');
+            const W = getVal('wood');
+            const Q = getVal('ore');
+            const B = getVal('boxes');
+            const stonePerLevel = getVal('stonePerLevel');
+
+            const targetElement = document.getElementById('targetLevel');
+            const targetInput = targetElement ? targetElement.value.trim() : "";
+
             const out = document.getElementById('output');
             if (!out) return;
+
             out.style.display = 'block';
 
+            if (stonePerLevel <= 0) {
+                out.innerHTML = `
+                    <span style="color:red; font-weight:bold">
+                        ❌ Vui lòng nhập số đá cần cho 1 cấp lớn hơn 0
+                    </span>
+                `;
+                return;
+            }
+
             let finalLv = 0;
+
             if (targetInput !== "") {
-                finalLv = parseInt(targetInput);
+                finalLv = parseInt(targetInput, 10);
+
+                if (isNaN(finalLv) || finalLv < 0) {
+                    out.innerHTML = `
+                        <span style="color:red; font-weight:bold">
+                            ❌ Cấp mục tiêu không hợp lệ
+                        </span>
+                    `;
+                    return;
+                }
             } else {
-                let lo = 0, hi = 100000;
+                let lo = 0;
+                let hi = 100000;
+
                 while (lo <= hi) {
-                    let mid = Math.floor((lo + hi) / 2);
-                    if (simulateOptimal(S, W, Q, B, mid).ok) { finalLv = mid; lo = mid + 1; }
-                    else { hi = mid - 1; }
+                    const mid = Math.floor((lo + hi) / 2);
+
+                    if (
+                        simulateOptimal(
+                            S, W, Q, B, mid, stonePerLevel
+                        ).ok
+                    ) {
+                        finalLv = mid;
+                        lo = mid + 1;
+                    } else {
+                        hi = mid - 1;
+                    }
                 }
             }
 
-            const res = simulateOptimal(S, W, Q, B, finalLv);
+            const res = simulateOptimal(
+                S,
+                W,
+                Q,
+                B,
+                finalLv,
+                stonePerLevel
+            );
+
             if (res.ok) {
                 const now = new Date();
                 const seasonStr = calculateGameSeason(now);
-                const fullTime = now.toLocaleTimeString('vi-VN') + " " + now.toLocaleDateString('vi-VN');
-                let logHtml = res.log.length > 0 ? res.log.join('<br>') : "Không cần đổi";
-                
+                const fullTime =
+                    now.toLocaleTimeString('vi-VN') +
+                    " " +
+                    now.toLocaleDateString('vi-VN');
+
+                // Điểm:
+                // 1 đá = 100 điểm
+                // 1 gỗ = 500 điểm
+                // 1 quặng = 2.000 điểm
+                const stoneUsed = stonePerLevel * finalLv;
+                const woodUsed = 340 * finalLv;
+                const oreUsed = 130 * finalLv;
+
+                const totalPoints =
+                    stoneUsed * 100 +
+                    woodUsed * 500 +
+                    oreUsed * 2000;
+
+                const logHtml =
+                    res.log.length > 0
+                        ? res.log.join('<br>')
+                        : "Không cần đổi";
+
                 out.innerHTML = `
                     <b>Cấp tối đa:</b> ${finalLv}<br>
-                    <b>Tổng điểm:</b> ${(finalLv * 556000).toLocaleString()}<br><br>
-                    <b>Các bước đổi:</b><br><div style="margin-top:5px">${logHtml}</div><br>
+                    <b>Tổng điểm:</b> ${totalPoints.toLocaleString()}<br><br>
+
+                    <b>Các bước đổi:</b><br>
+                    <div style="margin-top:5px">${logHtml}</div><br>
+
                     <b>Còn lại:</b><br>
                     <ul style="margin-top:5px; padding-left:20px">
                         <li>Đá: ${res.rem.s.toLocaleString()}</li>
@@ -134,63 +275,110 @@
                         <li>Quặng: ${res.rem.q.toLocaleString()}</li>
                     </ul>
                 `;
-                saveHistory(finalLv, (finalLv * 556000), seasonStr, fullTime);
+
+                saveHistory(
+                    finalLv,
+                    totalPoints,
+                    seasonStr,
+                    fullTime
+                );
             } else {
-                out.innerHTML = `<span style="color:red; font-weight:bold">❌ Không đủ tài nguyên cho cấp ${finalLv}</span>`;
+                out.innerHTML = `
+                    <span style="color:red; font-weight:bold">
+                        ❌ Không đủ tài nguyên cho cấp ${finalLv}
+                    </span>
+                `;
             }
+
             renderHistory();
         }
 
         function saveHistory(lv, pts, sea, time) {
-            let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
-            history.push({ lv: lv, pts: pts, sea: sea, time: time });
-            if (history.length > 100) history.shift();
-            localStorage.setItem("cannon_v7_final", JSON.stringify(history));
+            let history = JSON.parse(
+                localStorage.getItem("cannon_v7_final") || "[]"
+            );
+
+            history.push({
+                lv: lv,
+                pts: pts,
+                sea: sea,
+                time: time
+            });
+
+            if (history.length > 100) {
+                history.shift();
+            }
+
+            localStorage.setItem(
+                "cannon_v7_final",
+                JSON.stringify(history)
+            );
         }
 
         function renderHistory() {
             const box = document.getElementById("historyBox");
             const countDisplay = document.getElementById("historyCount");
+
             if (!box || !countDisplay) return;
 
-            let history = JSON.parse(localStorage.getItem("cannon_v7_final") || "[]");
+            let history = JSON.parse(
+                localStorage.getItem("cannon_v7_final") || "[]"
+            );
+
             countDisplay.innerText = `(${history.length}/100)`;
 
             if (history.length === 0) {
                 box.innerHTML = "<i>Chưa có dữ liệu</i>";
                 return;
             }
-            
-            box.innerHTML = history.slice().reverse().map((h, index) => {
-                const realIndex = history.length - index;
-                return `
-                    <div class="history-item">
-                        <div class="icon-text">
-                            <span class="history-index">#${realIndex}</span> 
-                            🕒 <b>${h.time}</b>
+
+            box.innerHTML = history
+                .slice()
+                .reverse()
+                .map((h, index) => {
+                    const realIndex = history.length - index;
+
+                    return `
+                        <div class="history-item">
+                            <div class="icon-text">
+                                <span class="history-index">#${realIndex}</span>
+                                🕒 <b>${h.time}</b>
+                            </div>
+
+                            <div class="icon-text">
+                                ⚔️ Lv: ${h.lv} | Điểm: ${h.pts.toLocaleString()}
+                            </div>
+
+                            <div class="icon-text">
+                                📅 ${h.sea}
+                            </div>
                         </div>
-                        <div class="icon-text">⚔️ Lv: ${h.lv} | Điểm: ${h.pts.toLocaleString()}</div>
-                        <div class="icon-text">📅 ${h.sea}</div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                })
+                .join('');
         }
 
         function clearHistory() {
-            if(confirm("Xóa toàn bộ lịch sử?")) {
+            if (confirm("Xóa toàn bộ lịch sử?")) {
                 localStorage.removeItem("cannon_v7_final");
                 renderHistory();
             }
         }
 
-        // LẮP SỰ KIỆN QUA ADDEVENTLISTENER (Không sợ bị xóa script)
+        // Lắp sự kiện
         const btnCalc = document.getElementById('btnComputeCannon');
         const btnClear = document.getElementById('btnClearHistory');
-        
-        if (btnCalc) btnCalc.addEventListener('click', computeCannon);
-        if (btnClear) btnClear.addEventListener('click', clearHistory);
 
-        // Chạy kết xuất lịch sử ngay khi tab được nạp thành công
+        if (btnCalc) {
+            btnCalc.addEventListener('click', computeCannon);
+        }
+
+        if (btnClear) {
+            btnClear.addEventListener('click', clearHistory);
+        }
+
+        // Hiển thị lịch sử khi tab được nạp
         renderHistory();
     })();
+
 </script>
